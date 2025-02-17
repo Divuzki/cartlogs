@@ -32,7 +32,7 @@ def login_view(request):
         login(request, user)
         return JsonResponse({
             'success': True,
-            'redirect_url': '/'  # Replace with your home page URL
+            'redirect_url': '/'
         })
     else:
         return JsonResponse({
@@ -86,7 +86,7 @@ def signup_view(request):
         login(request, user)
         return JsonResponse({
             'success': True,
-            'redirect_url': '/'  # Replace with your home page URL
+            'redirect_url': '/'
         })
     except Exception as e:
         return JsonResponse({

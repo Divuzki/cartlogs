@@ -30,6 +30,11 @@ class SocialMediaAccount(models.Model):
         ('not_verified', 'Not Verified'),
         ('pending', 'Pending'),
     ]
+    ACCOUNT_TYPE_CHOICES = [
+        ('free', 'Free'),
+        ('premium', 'Premium'),
+    ]
+    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES)
 
     category = models.ForeignKey(AccountCategory, on_delete=models.CASCADE)
     social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
@@ -110,7 +115,7 @@ class OrderItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.quantity}x {self.account.account_type} - {self.account.social_media}"
+        return f"{self.quantity}x {self.account.category.name} - {self.account.social_media}"
 
     @property
     def subtotal(self):
