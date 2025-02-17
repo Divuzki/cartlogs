@@ -26,11 +26,15 @@
         addToCart(account) {
             const existingItem = this.cart.find(item => item.id === account.id);
             if (existingItem) {
-                existingItem.quantity += 1;
+                if (existingItem.quantity < account.stock) {  // Check stock before increasing quantity
+                    existingItem.quantity += 1;
+                } else {
+                    alert('Cannot add more than available stock');
+                }
             } else {
                 this.cart.push({
                     id: account.id,
-                    type: account.type,
+                    title: account.title,
                     price: account.price,
                     quantity: 1
                 });
@@ -45,7 +49,11 @@
             const item = this.cart.find(item => item.id === id);
             if (item) {
                 if (increase) {
-                    item.quantity += 1;
+                    if (item.quantity < item.stock) {  // Check stock before increasing quantity
+                        item.quantity += 1;
+                    } else {
+                        alert('Cannot add more than available stock');
+                    }
                 } else if (item.quantity > 1) {
                     item.quantity -= 1;
                 }
