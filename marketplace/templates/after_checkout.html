@@ -16,7 +16,7 @@
         <h3 class="text-lg font-medium mt-4">Accounts:</h3>
         <ul class="list-disc pl-5">
             {% for item in order.items.all %}
-                <li class="mt-2">{{ item.quantity }} x {{ item.account.social_media }} - Subtotal: {{ item.subtotal }}</li>
+                <li class="mt-2 capitalize">{{ item.quantity }} x {{ item.account.social_media }} - Subtotal: {{ item.subtotal }}</li>
             {% endfor %}
         </ul>
         <h3 class="text-lg font-medium mt-4">Total Amount: {{ order.total_amount }}</h3>

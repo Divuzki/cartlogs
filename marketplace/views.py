@@ -7,9 +7,9 @@ from .models import SocialMediaAccount, Order, OrderItem
 from numerize.numerize import numerize
 
 
-def marketplace(request):
+def view_all(request, social_media):
     # Fetch accounts from the database
-    accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True)  # Only get active accounts
+    accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True, social_media=social_media)
     accounts_data = []
     
     for account in accounts:
@@ -29,7 +29,42 @@ def marketplace(request):
             'type': account.category.name
         })
     
-    return render(request, 'marketplace.html', {'accounts': accounts_data})
+    return render(request, 'view_all.html', {'accounts': accounts_data})
+
+    
+def marketplace(request):
+    social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True)
+    grouped_accounts = []
+
+    # Group accounts by social media
+    social_media_dict = {}
+    for account in social_media_accounts:
+        social_media = account.social_media
+        if social_media not in social_media_dict:
+            social_media_dict[social_media] = []
+        followers_count = account.followers_count
+        formatted_followers = numerize(followers_count, 2)
+        social_media_dict[social_media].append({
+            'id': account.id,
+            'title': f"{account.social_media} | {formatted_followers} followers",
+            'description': account.description,
+            'price': account.price,
+            'stock': account.stock,
+            'inStock': account.is_in_stock,  # Use the property to check stock
+            'verification_status': account.verification_status,
+            'account_age': account.account_age,
+            'type': account.category.name
+        })
+
+    # Convert to the desired structure
+    for name, accounts in social_media_dict.items():
+        grouped_accounts.append({
+            "name": name,
+            "id": name,
+            "accounts": accounts[:8]  # Limit to 8 accounts per social media
+        })
+
+    return render(request, 'marketplace.html', {'grouped_accounts': grouped_accounts})
 
 @require_POST
 def checkout(request):

@@ -5,18 +5,25 @@
     x-data="{
         isCartOpen: false,
         cart: [],
-        accounts: [
-            {% for account in accounts %}
+        groupedAccounts: [
+            {% for group in grouped_accounts %}
                 {
-                    id: {{ account.id }},
-                    title: '{{ account.title }}',
-                    description: '{{ account.description }}',
-                    price: {{ account.price }},
-                    stock: {{ account.stock }},
-                    inStock: {{ account.stock }} > 0,
-                    verification_status: '{{ account.verification_status }}',
-                    account_age: '{{ account.account_age }}',
-                    type: '{{ account.type }}',
+                    name: '{{ group.name }}',
+                    accounts: [
+                        {% for account in group.accounts %}
+                            {
+                                id: {{ account.id }},
+                                title: '{{ account.title }}',
+                                description: '{{ account.description }}',
+                                price: {{ account.price }},
+                                stock: {{ account.stock }},
+                                inStock: {{ account.stock }} > 0,
+                                verification_status: '{{ account.verification_status }}',
+                                account_age: '{{ account.account_age }}',
+                                type: '{{ account.type }}',
+                            }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
                 }{% if not forloop.last %},{% endif %}
             {% endfor %}
         ],
