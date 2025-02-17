@@ -1,0 +1,46 @@
+<template x-if="cart.length > 0">
+    <div>
+        <div class="space-y-4 mb-6">
+            <template x-for="item in cart" :key="item.id">
+                <div class="flex flex-col gap-2 p-4 border rounded-lg hover:border-gray-300 transition-colors duration-150">
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium" x-text="item.type"></div>
+                        <button 
+                            @click="removeFromCart(item.id)"
+                            class="text-red-500 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors duration-150"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                            <button 
+                                @click="updateQuantity(item.id, false)"
+                                class="p-1 rounded-md hover:bg-gray-200 transition-colors duration-150"
+                                :class="{ 'opacity-50 cursor-not-allowed': item.quantity <= 1 }"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                </svg>
+                            </button>
+                            <span x-text="item.quantity" class="w-8 text-center font-medium"></span>
+                            <button 
+                                @click="updateQuantity(item.id, true)"
+                                class="p-1 rounded-md hover:bg-gray-200 transition-colors duration-150"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="font-medium">₦<span x-text="(item.price * item.quantity).toLocaleString()"></span></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+        
+        {% include 'components/checkout_form.html' %}
+    </div>
+</template>

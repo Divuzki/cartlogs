@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Signup - Account Marketplace</title>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full mx-4" x-data="{ 
+            isLogin: true, 
+            formData: { 
+                username: '', 
+                email: '', 
+                password: '', 
+                password2: '' 
+            }, 
+            errors: {},
+            async submitLogin() {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                try {
+                    const response = await fetch('/auth/login/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            username: this.formData.username,
+                            password: this.formData.password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        this.errors = data.errors || {};
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.errors = { general: 'An error occurred during login' };
+                }
+            },
+            async submitSignup() {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                try {
+                    const response = await fetch('/auth/signup/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            username: this.formData.username,
+                            email: this.formData.email,
+                            password: this.formData.password,
+                            password2: this.formData.password2
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        this.errors = data.errors || {};
+                    }
+                } catch (error) {
+                    console.error('Signup error:', error);
+                    this.errors = { general: 'An error occurred during signup' };
+                }
+            }
+        }">
+            <!-- Card Container -->
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                <!-- Toggle Buttons -->
+                <div class="flex mb-8 bg-gray-100 rounded-lg p-1">
+                    <button 
+                        @click="isLogin = true" 
+                        :class="isLogin ? 'bg-white shadow-sm' : 'text-gray-500'"
+                        class="flex-1 py-2 rounded-lg text-center transition-all duration-200">
+                        Login
+                    </button>
+                    <button 
+                        @click="isLogin = false"
+                        :class="!isLogin ? 'bg-white shadow-sm' : 'text-gray-500'"
+                        class="flex-1 py-2 rounded-lg text-center transition-all duration-200">
+                        Sign Up
+                    </button>
+                </div>
+
+                <!-- General Error Message -->
+                <div x-show="errors.general" class="mb-4 text-red-500 text-sm text-center" x-text="errors.general"></div>
+
+                <!-- Login Form -->
+                <form x-show="isLogin" @submit.prevent="submitLogin">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Username</label>
+                            <input 
+                                type="text" 
+                                x-model="formData.username"
+                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                            <span x-show="errors.username" x-text="errors.username" class="text-red-500 text-sm"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <input 
+                                type="password" 
+                                x-model="formData.password"
+                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                            <span x-show="errors.password" x-text="errors.password" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <button 
+                            type="submit"
+                            class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Login
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Signup Form -->
+                <form x-show="!isLogin" @submit.prevent="submitSignup">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Username</label>
+                            <input 
+                                type="text" 
+                                x-model="formData.username"
+                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                            <span x-show="errors.username" x-text="errors.username" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <input 
+                                type="email" 
+                                x-model="formData.email"
+                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                            <span x-show="errors.email" x-text="errors.email" class="text-red-500 text-sm"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <input 
+                                type="password" 
+                                x-model="formData.password"
+                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                            <span x-show="errors.password" x-text="errors.password" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <input 
+                                type="password" 
+                                x-model="formData.password2"
+                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                            <span x-show="errors.password2" x-text="errors.password2" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <button 
+                            type="submit"
+                            class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Sign Up
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

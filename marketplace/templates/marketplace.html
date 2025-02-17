@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div 
+    x-data="{
+        isCartOpen: false,
+        cart: [],
+        accounts: [
+            {% for account in accounts %}
+                {
+                    id: {{ account.id }},
+                    title: '{{ account.title }}',
+                    description: '{{ account.description }}',
+                    price: {{ account.price }},
+                    stock: {{ account.stock }},
+                    inStock: {{ account.stock }} > 0,
+                    verification_status: '{{ account.verification_status }}',
+                    account_age: '{{ account.account_age }}',
+                    type: '{{ account.type }}',
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        processing: false,
+        notification: { show: false, message: '' },
+        
+        addToCart(account) {
+            const existingItem = this.cart.find(item => item.id === account.id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                this.cart.push({
+                    id: account.id,
+                    type: account.type,
+                    price: account.price,
+                    quantity: 1
+                });
+            }
+            this.saveCartToStorage();
+        },
+        removeFromCart(id) {
+            this.cart = this.cart.filter(item => item.id !== id);
+            this.saveCartToStorage();
+        },
+        updateQuantity(id, increase) {
+            const item = this.cart.find(item => item.id === id);
+            if (item) {
+                if (increase) {
+                    item.quantity += 1;
+                } else if (item.quantity > 1) {
+                    item.quantity -= 1;
+                }
+                this.saveCartToStorage();
+            }
+        },
+        saveCartToStorage() {
+            localStorage.setItem('cart', JSON.stringify(this.cart));
+        },
+        loadCartFromStorage() {
+            const savedCart = localStorage.getItem('cart');
+            if (savedCart) {
+                this.cart = JSON.parse(savedCart);
+            }
+        },
+        async handleCheckout() {
+            if (this.cart.length === 0) return;
+            
+            this.processing = true;
+            const form = document.getElementById('checkout-form');
+            const cartData = document.getElementById('cart-data');
+            cartData.value = JSON.stringify(this.cart);
+            
+            try {
+                await form.submit();
+            } catch (error) {
+                console.error('Checkout failed:', error);
+                alert('An error occurred during checkout. Please try again.');
+            } finally {
+                this.processing = false;
+            }
+        },
+        init() {
+            this.loadCartFromStorage();
+            
+            // Update accounts with stock status
+            this.accounts = this.accounts.map(account => ({
+                ...account,
+                inStock: account.stock > 0
+            }));
+        }
+    }"
+    @keydown.escape="isCartOpen = false"
+    class="min-h-screen bg-gray-100"
+>
+    <div class="max-w-6xl mx-auto">
+        <!-- Include Header Component -->
+        {% include 'components/header.html' %}
+
+        <div class="flex gap-6 relative">
+            <!-- Include Product List Component -->
+            {% include 'components/product_list.html' %}
+
+            <!-- Include Cart Sidebar Component -->
+            {% include 'components/cart_sidebar.html' %}
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="fixed bottom-4 right-4 z-50">
+        {% for message in messages %}
+        <div 
+            x-data="{ show: true }"
+            x-show="show"
+            x-init="setTimeout(() => show = false, 5000)"
+            class="bg-white shadow-lg rounded-lg p-4 mb-4 flex items-center gap-3 {% if message.tags %}{{ message.tags }}{% endif %}"
+        >
+            {% if message.tags == 'success' %}
+            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            {% elif message.tags == 'error' %}
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            {% endif %}
+            <p class="text-gray-800">{{ message }}</p>
+            <button 
+                @click="show = false"
+                class="text-gray-400 hover:text-gray-600"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
