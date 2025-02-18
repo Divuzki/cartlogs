@@ -6,6 +6,14 @@ import json
 from .models import SocialMediaAccount, Order, OrderItem
 from numerize.numerize import numerize
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.encoding import force_bytes
+from django.conf import settings
+
+from .utils import ProcessPayment
+
+PAYSTACK_SECRET_KEY = settings.PAYSTACK_SECRET_KEY
+
 
 def view_all(request, social_media):
     # Fetch accounts from the database
@@ -80,7 +88,6 @@ def checkout(request):
 
     try:
         cart_data = json.loads(request.POST.get('cart_data', '[]'))
-        print(cart_data)
         
         # Validate the cart data
         if not cart_data:
@@ -128,7 +135,7 @@ from django.conf import settings  # To access environment variables
 def generate_payment_link(amount, email):
     url = "https://api.paystack.co/transaction/initialize"
     headers = {
-        "Authorization": f"Bearer {settings.PAYSTACK_API_KEY}",
+        "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
         "Content-Type": "application/json"
     }
     data = {
@@ -145,6 +152,14 @@ def generate_payment_link(amount, email):
         # Handle error appropriately
         return None, None
 
+def caluate_gateway_fee(order_price):
+        gateway_fee = 0
+        if order_price <= 2500:
+            gateway_fee = 100
+        elif order_price > 2500:
+            gateway_fee = order_price * Decimal(0.025) + 100
+        return gateway_fee
+
 @require_GET
 def after_checkout(request, order_id):
     # Check if user is authenticated, if not redirect to login page
@@ -154,10 +169,65 @@ def after_checkout(request, order_id):
     order: Order = Order.objects.get(id=order_id)
 
     # Initialize payment link
-    payment_link, payment_reference = generate_payment_link(order.total_amount, request.user.email)
+    order_total = order.total_amount + caluate_gateway_fee(order.total_amount)
+    payment_link, payment_reference = generate_payment_link(order_total, request.user.email)
 
     # Save the payment reference in the order
     order.payment_reference = payment_reference
     order.save()
 
     return render(request, 'after_checkout.html', {'order': order, 'payment_link': payment_link})
+
+
+@csrf_exempt
+def paystack_webhook_handler(request):
+    HTTP_X_PAYSTACK_SIGNATURE_EXIST = (
+        "HTTP_X_PAYSTACK_SIGNATURE" in request.META
+        or "HTTP_X_PAYSTACK_SIGNATURE_HEADER" in request.META
+    )
+
+    # update HTTP_X_PAYSTACK_SIGNATURE_HEADER in request.META
+    if "HTTP_X_PAYSTACK_SIGNATURE_HEADER" in request.META:
+        request.META["HTTP_X_PAYSTACK_SIGNATURE"] = request.META[
+            "HTTP_X_PAYSTACK_SIGNATURE_HEADER"
+        ]
+
+    if request.method == "POST" and HTTP_X_PAYSTACK_SIGNATURE_EXIST:
+        # Get the Paystack signature from the headers
+        paystack_signature = request.META["HTTP_X_PAYSTACK_SIGNATURE"]
+        # Get the request body as bytes
+        raw_body = request.body
+        decoded_body = raw_body.decode("utf-8")
+
+        # Calculate the HMAC using the secret key
+        calculated_signature = hmac.new(
+            key=force_bytes(PAYSTACK_SECRET_KEY),
+            msg=force_bytes(decoded_body),
+            digestmod=hashlib.sha512,
+        ).hexdigest()
+
+        # Compare the calculated signature with the provided signature
+        # byepass signature verification for local development
+        if (
+            hmac.compare_digest(calculated_signature, paystack_signature)
+            or settings.DEBUG
+        ):
+            # Signature is valid, proceed with processing the event
+            try:
+                # get the event from request.body
+                event = json.loads(raw_body)
+                # get the event type from event
+                event_type = event["event"]
+                # get the event data from event
+                event_data = event["data"]
+                # process_payment
+                process_payment = ProcessPayment(event_type, event_data)
+                return process_payment.process_payment()
+
+            except UnicodeDecodeError:
+                return HttpResponse("Invalid request body encoding", status=400)
+
+        else:
+            return HttpResponse("NOT ALLOWED", status=403)
+
+    return HttpResponse("Invalid request", status=400)

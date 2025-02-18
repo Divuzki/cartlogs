@@ -36,9 +36,9 @@
                                 </span>
                                 <button 
                                     @click="addToCart(account)"
-                                    :class="account.inStock ? 'bg-green-500 hover:bg-green-600 active:bg-green-700' : 'bg-gray-300'"
+                                    :class="account.inStock && !(cart.find(item => item.id === account.id)?.quantity >= account.stock) ? 'bg-green-500 hover:bg-green-600 active:bg-green-700' : 'bg-gray-300'"
                                     class="rounded-lg p-2 text-white transition-colors duration-200 transform hover:scale-105"
-                                    :disabled="!account.inStock"
+                                    :disabled="!account.inStock || cart.find(item => item.id === account.id)?.quantity >= account.stock"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -79,13 +79,13 @@
                         </a>
                     </div>
                 </div>
-            </template>
-            <template x-if="group.accounts.length === 0">
-                <div class="flex flex-col items-center justify-center h-full">
-                    <div class="text-gray-600 text-center">
-                        No accounts available for this group.
+                <template x-if="group.accounts.length === 0">
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <div class="text-gray-600 text-center">
+                            No accounts available for this group.
+                        </div>
                     </div>
-                </div>
+                </template>
             </template>
         </div>
 </div>

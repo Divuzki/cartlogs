@@ -30,11 +30,6 @@ class SocialMediaAccount(models.Model):
         ('not_verified', 'Not Verified'),
         ('pending', 'Pending'),
     ]
-    ACCOUNT_TYPE_CHOICES = [
-        ('free', 'Free'),
-        ('premium', 'Premium'),
-    ]
-    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES)
 
     category = models.ForeignKey(AccountCategory, on_delete=models.CASCADE)
     social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
@@ -86,7 +81,7 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    order_number = models.CharField(max_length=20, unique=True)
+    order_number = models.CharField(max_length=20, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)

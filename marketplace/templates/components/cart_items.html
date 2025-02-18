@@ -20,6 +20,7 @@
                                 @click="updateQuantity(item.id, false)"
                                 class="p-1 rounded-md hover:bg-gray-200 transition-colors duration-150"
                                 :class="{ 'opacity-50 cursor-not-allowed': item.quantity <= 1 }"
+                                :disabled="item.quantity <= 1"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -30,6 +31,7 @@
                                 @click="updateQuantity(item.id, true)"
                                 class="p-1 rounded-md hover:bg-gray-200 transition-colors duration-150"
                                 :class="{ 'opacity-50 cursor-not-allowed': item.quantity >= item.stock }"
+                                :disabled="item.quantity >= item.stock"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
