@@ -1,11 +1,11 @@
 import logging
 
 from django.http import HttpResponse
-from .models import Order, Payment
+from .models import Order, Payment, Log, SocialMediaAccount
 from decimal import Decimal
 
 from django.conf import settings
-from django.db.models import Q
+from django.core.mail import EmailMessage
 
 
 class ProcessPayment:
@@ -32,7 +32,6 @@ class ProcessPayment:
             return HttpResponse("Invalid event type", status=400)
 
     def charge_dispute_create(self):
-        from django.core.mail import EmailMessage
 
         email = EmailMessage(
             "Charge Dispute",
@@ -106,6 +105,31 @@ class ProcessPayment:
 
             order.payment_status = "paid"
             order.save()
+
+            logs_list = []
+
+            social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(order=order)
+            for account in social_media_accounts:
+                account.stock -= 1
+                # if the account has reached 0 stock, mark it as inactive
+                if account.stock == 0:
+                    account.is_active = False
+                    
+                # get the log related to this account and mark it as inactive
+                log = Log.objects.filter(account=account).order_by("-timestamp")[:1].first()
+                logs_list.append(log)
+                log.is_active = False
+                account.save()
+
+            # send the logs_list to the user by email
+            email = EmailMessage(
+                "Logs From Cart Logs",
+                f"Logs\n\n{logs_list}",
+                settings.EMAIL_HOST_USER,
+                [order.user.email],
+            )
+            email.send()
+
             return HttpResponse("Payment successful", status=200)
 
    

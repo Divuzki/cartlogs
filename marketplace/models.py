@@ -59,6 +59,7 @@ class SocialMediaAccount(models.Model):
 class Log(models.Model):
     account = models.ForeignKey(SocialMediaAccount, on_delete=models.CASCADE)
     log_data = models.TextField()
+    is_active = models.BooleanField(default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
