@@ -150,6 +150,7 @@ if USE_S3:
     PUBLIC_MEDIA_LOCATION = "media"
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/"
     DEFAULT_FILE_STORAGE = "server.storage_backends.PublicMediaStorage"
+    # STATIC_ROOT = BASE_DIR / "static-root"
 
 
 elif not USE_S3:
