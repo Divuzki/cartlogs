@@ -16,6 +16,7 @@ json5==0.10.0
 numerize==0.12
 packaging==24.2
 pathspec==0.12.1
+psycopg2==2.9.10
 python-dotenv==1.0.1
 PyYAML==6.0.2
 regex==2024.11.6
