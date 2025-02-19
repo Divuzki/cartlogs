@@ -17,6 +17,15 @@ class AccountCategory(models.Model):
     def __str__(self):
         return self.name
 
+class Log(models.Model):
+    account = models.ForeignKey("marketplace.SocialMediaAccount", on_delete=models.CASCADE)
+    log_data = models.TextField()
+    is_active = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Log for {self.account}"
+
 class SocialMediaAccount(models.Model):
     SOCIAL_MEDIA_CHOICES = [
         ('twitter', 'Twitter'),
@@ -44,7 +53,7 @@ class SocialMediaAccount(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="The price of the account. It is in Naira."
     )
-    stock = models.PositiveIntegerField(default=0)
+    # stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,17 +62,12 @@ class SocialMediaAccount(models.Model):
         return f"{self.social_media} - {self.category} - {self.followers_count} followers"
 
     @property
+    def stock(self):
+        return Log.objects.filter(account=self, is_active=True).count()
+
+    @property
     def is_in_stock(self):
         return self.stock > 0
-
-class Log(models.Model):
-    account = models.ForeignKey(SocialMediaAccount, on_delete=models.CASCADE)
-    log_data = models.TextField()
-    is_active = models.BooleanField(default=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Log for {self.account}"
 
 class Order(models.Model):
     STATUS_CHOICES = [

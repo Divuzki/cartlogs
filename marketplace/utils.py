@@ -110,13 +110,12 @@ class ProcessPayment:
 
             social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(order=order)
             for account in social_media_accounts:
-                account.stock -= 1
                 # if the account has reached 0 stock, mark it as inactive
                 if account.stock == 0:
                     account.is_active = False
                     
                 # get the log related to this account and mark it as inactive
-                log = Log.objects.filter(account=account).order_by("-timestamp")[:1].first()
+                log = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:1].first()
                 logs_list.append(log)
                 log.is_active = False
                 account.save()
