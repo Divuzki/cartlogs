@@ -22,11 +22,17 @@
         <h3 class="text-lg font-medium mt-4">Total Amount: {{ order.total_amount }}</h3>
     </section>
     <section class="confirmation-message mb-6">
+        {% if is_paid %}
+        <p class="text-lg text-gray-600">Your order has been paid. Check your email for the receipt and logs.</p>
+        {% else %}
         <p class="text-lg text-gray-600">Your order is ready for payment.</p>
+        {% endif %}
     </section>
+    {% if not is_paid %}
     <section class="call-to-action">
         <a href="{{payment_link}}" class="btn bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300">Pay Now</a>
     </section>
+    {% endif %}
 </main>
 <script>
     // Clear the cart from localStorage
