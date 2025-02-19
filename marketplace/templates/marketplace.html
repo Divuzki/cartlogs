@@ -14,7 +14,7 @@
                             {
                                 id: {{ account.id }},
                                 title: '{{ account.title }}',
-                                description: '{{ account.description }}',
+                                description: `{{ account.description }}`,
                                 price: {{ account.price }},
                                 stock: {{ account.stock }},
                                 inStock: {{ account.stock }} > 0,
@@ -98,9 +98,12 @@
             this.loadCartFromStorage();
             
             // Update accounts with stock status
-            this.accounts = this.accounts.map(account => ({
-                ...account,
-                inStock: account.stock > 0
+            this.groupedAccounts = this.groupedAccounts.map(group => ({
+                ...group,
+                accounts: group.accounts.map(account => ({
+                    ...account,
+                    inStock: account.stock > 0
+                }))
             }));
         }
     }"

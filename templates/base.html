@@ -21,40 +21,6 @@
     {% load static %}
     
     <div class="p-4" x-data="{
-        accounts: [
-            {% for account in accounts %}
-                {
-                    id: {{ account.id }},
-                    type: '{{ account.type }}',
-                    description: '{{ account.description }}',
-                    price: {{ account.price }},
-                    stock: {{ account.stock }},
-                    inStock: {{ account.stock }} > 0
-                }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
-        groupedAccounts: [
-            {% for group in grouped_accounts %}
-                {
-                    name: '{{ group.name }}',
-                    accounts: [
-                        {% for account in group.accounts %}
-                            {
-                                id: {{ account.id }},
-                                title: '{{ account.title }}',
-                                description: '{{ account.description }}',
-                                price: {{ account.price }},
-                                stock: {{ account.stock }},
-                                inStock: {{ account.stock }} > 0,
-                                verification_status: '{{ account.verification_status }}',
-                                account_age: '{{ account.account_age }}',
-                                type: '{{ account.type }}',
-                            }{% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                    ]
-                }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
         cart: [],
         isCartOpen: false,
         processing: false,

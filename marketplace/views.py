@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 import json
-from .models import SocialMediaAccount, Order, OrderItem
+from .models import SocialMediaAccount, Order, OrderItem, Payment
 from numerize.numerize import numerize
 
 from django.views.decorators.csrf import csrf_exempt
@@ -175,6 +175,11 @@ def after_checkout(request, order_id):
     # Save the payment reference in the order
     order.payment_reference = payment_reference
     order.save()
+
+    # check of user has already paid for the order
+    payment = Payment.objects.filter(order=order, payment_reference=payment_reference).first()
+    if payment:
+        return redirect('after_checkout', order.id)
 
     return render(request, 'after_checkout.html', {'order': order, 'payment_link': payment_link})
 
