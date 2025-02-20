@@ -12,7 +12,7 @@
                         <div class="hidden md:block">Stock</div>
                     </div>
                     <template x-for="account in group.accounts" :key="account.id">
-                        <div x-data="{ dropdownOpen: null }" class="grid grid-cols-3 items-center py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                        <div x-data="{ dropdownOpen: null }" class="grid grid-cols-3 select-none items-center py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
                             <div class="flex items-center gap-3">
                                 <!-- aws s3 bind with group.name. e.g 'static/instagram.svg' -->
                                 <img x-bind:src="'{% static 'icons' %}/' + group.name + '.svg'" class="w-4 h-4 md:w-8 md:h-8">
@@ -66,7 +66,7 @@
                             x-transition:leave="transition ease-in duration-100" 
                             x-transition:leave-start="opacity-100 transform scale-100" 
                             x-transition:leave-end="opacity-0 transform scale-95"
-                            class="dropdown-details mt-2 p-4  w-full"
+                            class="dropdown-details mt-2 p-4  w-full select-text"
                             style="grid-area:  2 / 4 / 2 / 1;"
                             @click.away="dropdownOpen = null"
                             >
