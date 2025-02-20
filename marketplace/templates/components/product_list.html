@@ -28,7 +28,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="text-gray-900 font-medium text-sm text-center">₦<span class="md:text-lg text-xs" x-text="account.price.toLocaleString()"></span></div>
+                            <div @click="dropdownOpen = dropdownOpen === account.id ? null : account.id" class="text-gray-900 font-medium text-sm text-center">₦<span class="md:text-lg text-xs" x-text="account.price.toLocaleString()"></span></div>
                             <div class="flex md:flex-row flex-col gap-2 text-xs md:text-base items-end pr-2 justify-between">
                                 <span class="text-gray-600 flex gap-2">
                                     <span x-text="account.stock"></span> pcs.
