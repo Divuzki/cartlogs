@@ -131,8 +131,7 @@
                                         <div class="flex justify-between items-center w-full">
                                             <div>
                                                 <div class="font-medium cursor-pointer capitalize text-sm md:text-base" x-text="account.title" @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"></div>
-                                                <div class="text-xs md:text-sm text-gray-600 md:block hidden" @click="dropdownOpen = dropdownOpen === account.id ? null : account.id" x-text="account.description"></div>
-                                            </div>
+                                             </div>
                                         </div>
                                     </div>
                                     <div @click="dropdownOpen = dropdownOpen === account.id ? null : account.id" class="text-gray-900 font-medium text-sm text-center">₦<span class="md:text-lg text-xs" x-text="account.price.toLocaleString()"></span></div>
@@ -164,37 +163,40 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </div>
-                            <!-- Dropdown Details -->
-                            <div 
-                            x-show="dropdownOpen === account.id" 
-                            x-transition:enter="transition ease-out duration-150" 
-                            x-transition:enter-start="opacity-0 transform scale-95" 
-                            x-transition:enter-end="opacity-100 transform scale-100" 
-                            x-transition:leave="transition ease-in duration-100" 
-                            x-transition:leave-start="opacity-100 transform scale-100" 
-                            x-transition:leave-end="opacity-0 transform scale-95"
-                            class="dropdown-details mt-2 p-4  w-full select-text"
-                            style="grid-area:  2 / 4 / 2 / 1;"
-                            @click.away="dropdownOpen = null"
-                            >
-                            
-                                <p class="text-sm font-bold md:hidden text-gray-600"><span x-text="account.description"></span></p>
-                                <p 
-                                x-show="account.account_age !== null"
+                             <!-- Dropdown Details -->
+                             <div 
+                             x-show="dropdownOpen === account.id" 
+                             x-transition:enter="transition ease-out duration-150" 
+                             x-transition:enter-start="opacity-0 transform scale-95" 
+                             x-transition:enter-end="opacity-100 transform scale-100" 
+                             x-transition:leave="transition ease-in duration-100" 
+                             x-transition:leave-start="opacity-100 transform scale-100" 
+                             x-transition:leave-end="opacity-0 transform scale-95"
+                             class="dropdown-details mt-2 p-4  w-full select-text"
+                             style="grid-area:  2 / 4 / 2 / 1;"
+                             @click.away="dropdownOpen = null"
+                             >
+                             
+                                 <p class="text-sm font-bold text-gray-600"><span x-text="account.description"></span></p>
+                                 <p
+                                 x-show="account.account_age !== 'None'"
                                  class="text-sm font-semibold">Account Year: <span x-text="account.account_age"></span></p>
-                                <div 
-                                style="grid-area:  2 / 2 ; z-index: 2"
-                                class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
-                                :class="{'rotate-180': dropdownOpen === account.id}"
-                                @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
-                            >
-                                <!-- arrow down icon -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                            </div>
-                            <!-- End Dropdown Details -->
+                                 <p
+                                 x-show="account.verification_status !== 'None'"
+                                 class="text-sm font-semibold">Verification Status: <span x-text="account.verification_status"></span></p>
+                                 <div 
+                                 style="grid-area:  2 / 2 ; z-index: 2"
+                                 class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
+                                 :class="{'rotate-180': dropdownOpen === account.id}"
+                                 @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
+                             >
+                                 <!-- arrow down icon -->
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                 </svg>
+                             </div>
+                             </div>
+                             <!-- End Dropdown Details -->
                                 </div>
                             </template>
                     </div>

@@ -38,8 +38,8 @@ class SocialMediaAccount(models.Model):
     description = models.TextField(help_text="A brief description of the social media account.")
     followers_count = models.PositiveIntegerField(default=0, help_text="The number of followers on the account.", null=True, blank=True)
     following_count = models.PositiveIntegerField(default=0, help_text="The number of following on the account.", null=True, blank=True)
-    account_age = models.CharField(max_length=4, blank=True)
-    verification_status = models.CharField(max_length=12, choices=VERIFICATION_STATUS_CHOICES)
+    account_age = models.CharField(max_length=4, blank=True, null=True)
+    verification_status = models.CharField(max_length=12, choices=VERIFICATION_STATUS_CHOICES, blank=True, null=True)
     price = models.DecimalField(
         max_digits=10, 
         decimal_places=2,

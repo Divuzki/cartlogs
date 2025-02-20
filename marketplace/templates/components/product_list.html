@@ -14,17 +14,10 @@
                     <template x-for="account in group.accounts" :key="account.id">
                         <div x-data="{ dropdownOpen: null }" class="grid grid-cols-3 select-none items-center py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
                             <div class="flex items-center gap-3">
-                                <!-- aws s3 bind with group.name. e.g 'static/instagram.svg' -->
                                 <img x-bind:src="'{% static 'icons' %}/' + group.name + '.svg'" class="w-4 h-4 md:w-8 md:h-8">
-                                <!-- <div class="bg-black p-1 md:p-2 rounded-lg shadow-sm">
-                                    <svg class="w-3 h-3 md:w-4 md:h-4 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M23 3L2 12.5l7 1.5m14-11l-7 16-2.5-7L23 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </div> -->
                                 <div class="flex justify-between items-center w-full">
                                     <div>
                                         <div class="font-medium cursor-pointer capitalize text-sm md:text-base" x-text="account.title" @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"></div>
-                                        <div class="text-xs md:text-sm text-gray-600 md:block hidden" @click="dropdownOpen = dropdownOpen === account.id ? null : account.id" x-text="account.description"></div>
                                     </div>
                                 </div>
                             </div>
@@ -71,10 +64,13 @@
                             @click.away="dropdownOpen = null"
                             >
                             
-                                <p class="text-sm font-bold md:hidden text-gray-600"><span x-text="account.description"></span></p>
+                                <p class="text-sm font-bold text-gray-600"><span x-text="account.description"></span></p>
                                 <p
-                                x-show="account.account_age !== null"
+                                x-show="account.account_age !== 'None'"
                                 class="text-sm font-semibold">Account Year: <span x-text="account.account_age"></span></p>
+                                <p
+                                x-show="account.verification_status !== 'None'"
+                                class="text-sm font-semibold">Verification Status: <span x-text="account.verification_status"></span></p>
                                 <div 
                                 style="grid-area:  2 / 2 ; z-index: 2"
                                 class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
@@ -97,7 +93,7 @@
                             class="btn bg-green-500 flex items-center gap-2 text-white text-sm font-semibold py-2 px-4 rounded-lg block hover:bg-green-600 transition duration-300 capitalize"
                             x-bind:href="`/view_all/${group.name}`"
                             x-bind:text="group.name"
-                    x-show="group.accounts.length > 8"
+                    x-show="group.accounts.length > 5"
 
                         >view all
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
