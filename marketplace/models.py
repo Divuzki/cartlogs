@@ -32,6 +32,10 @@ class SocialMediaAccount(models.Model):
         ('facebook', 'Facebook'),
         ('instagram', 'Instagram'),
         ('tiktok', 'TikTok'),
+        ('vpn', 'VPN'),
+        ('tools', 'Tools'),
+        ('email', 'Email'),
+        ('streaming', 'Streaming'),
     ]
 
     VERIFICATION_STATUS_CHOICES = [
@@ -39,6 +43,8 @@ class SocialMediaAccount(models.Model):
         ('not_verified', 'Not Verified'),
         ('pending', 'Pending'),
     ]
+
+    title = models.CharField(max_length=100, blank=True, null=True)
 
     category = models.ForeignKey(AccountCategory, on_delete=models.CASCADE)
     social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)

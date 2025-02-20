@@ -27,7 +27,7 @@ def view_all(request, social_media):
         
         accounts_data.append({
             'id': account.id,
-            'title': f"{account.social_media} | {formatted_followers} followers",
+            'title': f"{account.social_media} | {formatted_followers} followers" if not account.title else account.title,
             'description': account.description,
             'price': account.price,
             'stock': account.stock,
@@ -54,7 +54,7 @@ def marketplace(request):
         formatted_followers = numerize(followers_count, 2)
         social_media_dict[social_media].append({
             'id': account.id,
-            'title': f"{account.social_media} | {formatted_followers} followers",
+            'title': f"{account.social_media} | {formatted_followers} followers" if not account.title else account.title,
             'description': account.description,
             'price': account.price,
             'stock': account.stock,
