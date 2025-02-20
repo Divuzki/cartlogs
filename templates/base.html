@@ -1,9 +1,40 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter/X Marketplace</title>
+    
+    <!-- Primary SEO Tags -->
+<title>Cartlogs - Buy Premium VPN, Streaming & Social Media Accounts</title>
+<meta name="description" content="Shop verified accounts for Netflix, Spotify, Instagram & top VPN services. Instant delivery, 24/7 support, and lifetime warranty on all purchases.">
+
+<!-- Open Graph (Facebook/LinkedIn) -->
+<meta property="og:title" content="Cartlogs | Premium Digital Accounts Marketplace">
+<meta property="og:description" content="Get instant access to streaming platforms, VPNs & social media accounts. Trusted by 50,000+ users worldwide.">
+{% comment %} <meta property="og:image" content="https://cartlogs.com/static/img/og-banner.jpg"> {% endcomment %}
+<meta property="og:url" content="https://cartlogs.com">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cartlogs">
+
+<!-- Twitter Cards -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cartlogs - Digital Accounts Store">
+<meta name="twitter:description" content="✅ Verified accounts | ⚡ Instant delivery | 🔒 256-bit encryption">
+{% comment %} <meta name="twitter:image" content="https://cartlogs.com/static/img/twitter-card.jpg"> {% endcomment %}
+<meta name="twitter:site" content="@cartlogs">
+
+<!-- Technical SEO -->
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+
+<!-- Security/Trust Signals -->
+{% comment %} <meta name="facebook-domain-verification" content="your_verification_code"> {% endcomment %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval';">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <!-- Fixed: Changed script to link for CSS -->
@@ -16,6 +47,7 @@
         .slide-enter { transform: translateX(100%); }
         .slide-enter-active { transition: transform 300ms ease-out; }
     </style>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
 </head>
 <body class="min-h-screen bg-gray-100">
     {% load static %}
