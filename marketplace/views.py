@@ -25,7 +25,10 @@ def view_all(request, social_media):
     for account in accounts:
         # format followers count to 1000 to 1k or 5000
         followers_count = account.followers_count
-        formatted_followers = numerize(followers_count, 2)
+        try:
+            formatted_followers = numerize(followers_count, 2)
+        except:
+            formatted_followers = followers_count
         
         accounts_data.append({
             'id': account.id,
@@ -53,7 +56,10 @@ def marketplace(request):
         if social_media not in social_media_dict:
             social_media_dict[social_media] = []
         followers_count = account.followers_count
-        formatted_followers = numerize(followers_count, 2)
+        try:
+            formatted_followers = numerize(followers_count, 2)
+        except:
+            formatted_followers = followers_count
         social_media_dict[social_media].append({
             'id': account.id,
             'title': f"{account.social_media} | {formatted_followers} followers" if not account.title else account.title,
