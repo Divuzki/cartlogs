@@ -37,7 +37,7 @@ def view_all(request, social_media):
             'type': account.category.name
         })
     
-    return render(request, 'view_all.html', {'accounts': accounts_data})
+    return render(request, 'view_all.html', {'accounts': accounts_data, 'social_media': social_media})
 
     
 def marketplace(request):
