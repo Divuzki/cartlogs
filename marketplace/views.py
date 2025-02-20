@@ -138,9 +138,17 @@ def generate_payment_link(amount, email):
         "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
         "Content-Type": "application/json"
     }
+    # get site url and add /checkout/:order_id and use that as callback url
+    site_url = request.build_absolute_uri('/')
+    callback_url = site_url + 'checkout/' + str(order_id) + '/'
     data = {
         "email": email,
         "amount": str(int(amount * 100)),  # Paystack expects amount in kobo
+        "callback_url": callback_url,
+        "metadata": {
+            "order_id": order_id,
+            "cancel_action": callback_url
+        }
     }
 
     response = requests.post(url, headers=headers, json=data)
