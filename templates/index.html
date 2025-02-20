@@ -15,7 +15,7 @@
             {% for account in accounts %}
                 {
                     id: {{ account.id }},
-                    description: '{{ account.description }}',
+                    description: `{{ account.description }}`,
                     price: {{ account.price }},
                     stock: {{ account.stock }},
                     inStock: {{ account.stock }} > 0
