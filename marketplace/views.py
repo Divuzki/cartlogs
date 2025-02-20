@@ -37,7 +37,7 @@ def view_all(request, social_media):
             'price': account.price,
             'stock': account.stock,
             'inStock': account.is_in_stock,  # Use the property to check stock
-            'verification_status': account.verification_status,
+            'verification_status': account.verification_status.replace('_', ' '),
             'account_age': account.account_age,
         })
     
@@ -66,7 +66,7 @@ def marketplace(request):
             'price': account.price,
             'stock': account.stock,
             'inStock': account.is_in_stock,  # Use the property to check stock
-            'verification_status': account.verification_status,
+            'verification_status': account.verification_status.replace('_', ' '),
             'account_age': account.account_age,
         })
 
