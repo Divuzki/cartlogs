@@ -162,6 +162,29 @@ def generate_payment_link(callback_url, amount, email):
         # Handle error appropriately
         return None, None
 
+def verify_payment(reference):
+    """
+    #!/bin/sh
+url="https://api.paystack.co/transaction/verify/{reference}"
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+curl "$url" -H "$authorization" -X GET
+    """
+    url = f"https://api.paystack.co/transaction/verify/{reference}"
+    headers = {
+        "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        data = response.json().get('data', {})
+        return data['status']
+    else:
+        # Handle error appropriately
+        return None
+
 def caluate_gateway_fee(order_price):
         gateway_fee = 0
         if order_price <= 2500:
@@ -181,6 +204,15 @@ def after_checkout(request, order_id):
     # check of user has already paid for the order
     if order.payment_status == 'paid':
         return render(request, 'after_checkout.html', {'order': order, 'is_paid': True})
+
+    if order.payment_reference:
+        # verify the payment
+        payment_status = verify_payment(order.payment_reference)
+        if payment_status == 'success':
+            order.payment_status = 'paid'
+            order.save()
+            return render(request, 'after_checkout.html', {'order': order, 'is_paid': True})
+        
 
     site_url = request.build_absolute_uri('/')
     callback_url = site_url + 'after_checkout/' + str(order_id) + '/'
