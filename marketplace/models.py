@@ -49,8 +49,8 @@ class SocialMediaAccount(models.Model):
     category = models.ForeignKey(AccountCategory, on_delete=models.CASCADE)
     social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
     description = models.TextField(help_text="A brief description of the social media account.")
-    followers_count = models.PositiveIntegerField(default=0)
-    following_count = models.PositiveIntegerField(default=0)
+    followers_count = models.PositiveIntegerField(default=0, help_text="The number of followers on the account.", null=True, blank=True)
+    following_count = models.PositiveIntegerField(default=0, help_text="The number of following on the account.", null=True, blank=True)
     account_age = models.CharField(max_length=4, blank=True)
     verification_status = models.CharField(max_length=12, choices=VERIFICATION_STATUS_CHOICES)
     price = models.DecimalField(
