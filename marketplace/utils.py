@@ -1,7 +1,7 @@
 import logging
 
 from django.http import HttpResponse
-from .models import Order, Payment, Log, SocialMediaAccount
+from .models import Order, OrderItem, Payment, Log, SocialMediaAccount
 from decimal import Decimal
 
 from django.conf import settings
@@ -79,6 +79,7 @@ class ProcessPayment:
         order_price = Decimal(order_price) / 100
 
         # get the order from the database
+        print(reference)
         order_qs: list[Order] = (
             Order.objects.select_related("user")
             .filter(payment_reference=reference)
@@ -104,11 +105,15 @@ class ProcessPayment:
             )
 
             order.payment_status = "paid"
+            order.status = "completed"
             order.save()
 
             logs_list = []
 
-            social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(order=order)
+            
+
+            order_items: list[OrderItem] = OrderItem.objects.filter(order=order)
+            social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(id__in=[item.account.id for item in order_items])
             for account in social_media_accounts:
                 # if the account has reached 0 stock, mark it as inactive
                 if account.stock == 0:
@@ -116,6 +121,16 @@ class ProcessPayment:
                     
                 # get the log related to this account and mark it as inactive
                 log = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:1].first()
+                if not log:
+                    # send an email to the user
+                    email = EmailMessage(
+                        "No Logs Left",
+                        f"No Logs Left\n\n{account.title}, {account.social_media}, ID: {account.id}. Please contact the admin.",
+                        settings.EMAIL_HOST_USER,
+                        [order.user.email],
+                    )
+                    email.send()
+                    continue
                 logs_list.append(log)
                 log.is_active = False
                 account.save()
@@ -128,6 +143,7 @@ class ProcessPayment:
                 [order.user.email],
             )
             email.send()
+            
 
             return HttpResponse("Payment successful", status=200)
 

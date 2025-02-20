@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST, require_GET
 import json
 from .models import SocialMediaAccount, Order, OrderItem
@@ -9,8 +9,10 @@ from numerize.numerize import numerize
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.encoding import force_bytes
 from django.conf import settings
-
+import hmac
+import hashlib
 from .utils import ProcessPayment
+
 
 PAYSTACK_SECRET_KEY = settings.PAYSTACK_SECRET_KEY
 
@@ -132,21 +134,17 @@ def checkout(request):
 import requests
 from django.conf import settings  # To access environment variables
 
-def generate_payment_link(amount, email):
+def generate_payment_link(callback_url, amount, email):
     url = "https://api.paystack.co/transaction/initialize"
     headers = {
         "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
         "Content-Type": "application/json"
     }
-    # get site url and add /checkout/:order_id and use that as callback url
-    site_url = request.build_absolute_uri('/')
-    callback_url = site_url + 'checkout/' + str(order_id) + '/'
     data = {
         "email": email,
         "amount": str(int(amount * 100)),  # Paystack expects amount in kobo
         "callback_url": callback_url,
         "metadata": {
-            "order_id": order_id,
             "cancel_action": callback_url
         }
     }
@@ -179,10 +177,13 @@ def after_checkout(request, order_id):
     # check of user has already paid for the order
     if order.payment_status == 'paid':
         return render(request, 'after_checkout.html', {'order': order, 'is_paid': True})
+
+    site_url = request.build_absolute_uri('/')
+    callback_url = site_url + 'after_checkout/' + str(order_id) + '/'
     
     # Initialize payment link
     order_total = order.total_amount + caluate_gateway_fee(order.total_amount)
-    payment_link, payment_reference = generate_payment_link(order_total, request.user.email)
+    payment_link, payment_reference = generate_payment_link(callback_url, order_total, request.user.email)
 
     # Save the payment reference in the order
     order.payment_reference = payment_reference
