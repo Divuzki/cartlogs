@@ -19,8 +19,7 @@
                                 stock: {{ account.stock }},
                                 inStock: {{ account.stock }} > 0,
                                 verification_status: '{{ account.verification_status }}',
-                                account_age: '{{ account.account_age }}',
-                                type: '{{ account.type }}',
+                                account_age: '{{ account.account_age }}'
                             }{% if not forloop.last %},{% endif %}
                         {% endfor %}
                     ]

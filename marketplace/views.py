@@ -39,7 +39,6 @@ def view_all(request, social_media):
             'inStock': account.is_in_stock,  # Use the property to check stock
             'verification_status': account.verification_status,
             'account_age': account.account_age,
-            'type': account.category.name
         })
     
     return render(request, 'view_all.html', {'accounts': accounts_data, 'social_media': social_media})
@@ -69,7 +68,6 @@ def marketplace(request):
             'inStock': account.is_in_stock,  # Use the property to check stock
             'verification_status': account.verification_status,
             'account_age': account.account_age,
-            'type': account.category.name
         })
 
     # Convert to the desired structure

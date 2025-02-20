@@ -1,14 +1,9 @@
 from django.contrib import admin
-from .models import AccountCategory, SocialMediaAccount, Order, OrderItem, Payment, Log
-
-class AccountCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'created_at', 'updated_at')
-    search_fields = ('name',)
-    ordering = ('name',)
+from .models import SocialMediaAccount, Order, OrderItem, Payment, Log
 
 class SocialMediaAccountAdmin(admin.ModelAdmin):
-    list_display = ('social_media', 'category__name', 'followers_count', 'price', 'is_active')
-    search_fields = ('social_media', 'category__name')
+    list_display = ('social_media', 'title', 'followers_count', 'price', 'is_active')
+    search_fields = ('social_media', 'title')
     list_filter = ('social_media', 'is_active')
     ordering = ('social_media',)
 
@@ -35,7 +30,6 @@ class LogAdmin(admin.ModelAdmin):
     ordering = ('-timestamp',)
 
 # Register the models with the admin site
-admin.site.register(AccountCategory, AccountCategoryAdmin)
 admin.site.register(SocialMediaAccount, SocialMediaAccountAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem, OrderItemAdmin)

@@ -5,18 +5,6 @@ from decimal import Decimal
 import uuid
 
 
-class AccountCategory(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name_plural = "Account Categories"
-
-    def __str__(self):
-        return self.name
-
 class Log(models.Model):
     account = models.ForeignKey("marketplace.SocialMediaAccount", on_delete=models.CASCADE)
     log_data = models.TextField()
@@ -46,7 +34,6 @@ class SocialMediaAccount(models.Model):
 
     title = models.CharField(max_length=100, blank=True, null=True)
 
-    category = models.ForeignKey(AccountCategory, on_delete=models.CASCADE)
     social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
     description = models.TextField(help_text="A brief description of the social media account.")
     followers_count = models.PositiveIntegerField(default=0, help_text="The number of followers on the account.", null=True, blank=True)
@@ -65,7 +52,7 @@ class SocialMediaAccount(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.social_media} - {self.category} - {self.followers_count} followers"
+        return f"{self.social_media} - {self.title} - {self.followers_count} followers"
 
     @property
     def stock(self):
@@ -121,7 +108,7 @@ class OrderItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.quantity}x {self.account.category.name} - {self.account.social_media}"
+        return f"{self.quantity}x {self.account.title} - {self.account.social_media}"
 
     @property
     def subtotal(self):

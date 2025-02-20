@@ -15,7 +15,6 @@
             {% for account in accounts %}
                 {
                     id: {{ account.id }},
-                    type: '{{ account.type }}',
                     description: '{{ account.description }}',
                     price: {{ account.price }},
                     stock: {{ account.stock }},
@@ -35,7 +34,6 @@
             } else {
                 this.cart.push({
                     id: account.id,
-                    type: account.type,
                     price: account.price,
                     quantity: 1
                 });
@@ -105,7 +103,6 @@
                                         </svg>
                                     </div>
                                     <div>
-                                        <div class="font-medium" x-text="account.type"></div>
                                         <div class="text-sm text-gray-600" x-text="account.description"></div>
                                     </div>
                                 </div>
@@ -144,7 +141,7 @@
                                     <template x-for="item in cart" :key="item.id">
                                         <div class="flex flex-col gap-2 pb-4 border-b">
                                             <div class="flex justify-between items-start">
-                                                <div class="text-sm font-medium" x-text="item.type"></div>
+                                                <div class="text-sm font-medium" x-text="item.description"></div>
                                                 <button 
                                                     @click="removeFromCart(item.id)"
                                                     class="text-red-500 hover:text-red-600"
