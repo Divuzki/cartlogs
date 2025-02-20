@@ -115,6 +115,7 @@ class ProcessPayment:
             order_items: list[OrderItem] = OrderItem.objects.filter(order=order)
             social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(id__in=[item.account.id for item in order_items])
             for account in social_media_accounts:
+                
                 # if the account has reached 0 stock, mark it as inactive
                 if account.stock == 0:
                     account.is_active = False
@@ -123,6 +124,7 @@ class ProcessPayment:
                 log = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:1].first()
                 if not log:
                     # send an email to the user
+                    print("No Logs Left")
                     email = EmailMessage(
                         "No Logs Left",
                         f"No Logs Left\n\n{account.title}, {account.social_media}, ID: {account.id}. Please contact the admin.",
@@ -133,6 +135,7 @@ class ProcessPayment:
                     continue
                 logs_list.append(log)
                 log.is_active = False
+                log.save()
                 account.save()
 
             # send the logs_list to the user by email
@@ -143,6 +146,7 @@ class ProcessPayment:
                 [order.user.email],
             )
             email.send()
+            print("Logs sent to user")
             
 
             return HttpResponse("Payment successful", status=200)
