@@ -133,7 +133,7 @@ class ProcessPayment:
                     )
                     email.send()
                     continue
-                logs_list.append(log)
+                logs_list.append(log.log_data)
                 log.is_active = False
                 log.save()
                 account.save()
