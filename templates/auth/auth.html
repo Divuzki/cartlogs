@@ -4,12 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login/Signup - Account Marketplace</title>
-    <script src="//unpkg.com/alpinejs" defer></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Login/Signup - Cartlogs</title>
+    <link rel="icon" type="image/png" href="{% static 'favicon.ico' %}" />
+    <script src="{% static 'cdn.min.js' %}" defer></script>
+    <link href="{% static 'tailwind.min.css' %}" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
-    <div class="min-h-screen flex items-center justify-center">
+<body class="bg-gradient-to-br from-green-50 to-indigo-50 min-h-screen">
+    <!-- Header -->
+    <header class="w-full bg-white shadow-sm py-4 px-6 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-start gap-4">
+            {% comment %} left arrow to go back {% endcomment %}
+            <a href="/" class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                
+            </a>
+            <div class="flex items-center space-x-2">
+                <img src="{% static 'logos/apple-touch-icon.png' %}" alt="Logo" class="w-8 h-8"/>
+                <span class="text-xl font-semibold text-gray-800">Cartlogs</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="min-h-[calc(100vh-120px)] flex items-center justify-center">
         <div class="max-w-md w-full mx-4" x-data="{ 
             isLogin: true, 
             formData: { 
@@ -77,7 +95,19 @@
             }
         }">
             <!-- Card Container -->
-            <div class="bg-white rounded-lg shadow-xl p-8">
+            <div class="bg-white rounded-xl shadow-xl p-8">
+                <!-- Welcome Message (Login) -->
+                <div x-show="isLogin" class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800">Welcome Back!</h2>
+                    <p class="text-gray-600 mt-2">We're glad to see you again</p>
+                </div>
+
+                <!-- Sign Up Message -->
+                <div x-show="!isLogin" class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800">Create Account</h2>
+                    <p class="text-gray-600 mt-2">Join our marketplace today</p>
+                </div>
+
                 <!-- Toggle Buttons -->
                 <div class="flex mb-8 bg-gray-100 rounded-lg p-1">
                     <button 
@@ -106,7 +136,7 @@
                             <input 
                                 type="text" 
                                 x-model="formData.username"
-                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.username" x-text="errors.username" class="text-red-500 text-sm"></span>
                         </div>
@@ -116,14 +146,14 @@
                             <input 
                                 type="password" 
                                 x-model="formData.password"
-                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.password" x-text="errors.password" class="text-red-500 text-sm"></span>
                         </div>
 
                         <button 
                             type="submit"
-                            class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200">
                             Login
                         </button>
                     </div>
@@ -138,7 +168,7 @@
                             <input 
                                 type="text" 
                                 x-model="formData.username"
-                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.username" x-text="errors.username" class="text-red-500 text-sm"></span>
                         </div>
@@ -148,7 +178,7 @@
                             <input 
                                 type="email" 
                                 x-model="formData.email"
-                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.email" x-text="errors.email" class="text-red-500 text-sm"></span>
                         </div>
@@ -158,7 +188,7 @@
                             <input 
                                 type="password" 
                                 x-model="formData.password"
-                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.password" x-text="errors.password" class="text-red-500 text-sm"></span>
                         </div>
@@ -168,16 +198,22 @@
                             <input 
                                 type="password" 
                                 x-model="formData.password2"
-                                class="mt-1 block w-full p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.password2" x-text="errors.password2" class="text-red-500 text-sm"></span>
                         </div>
 
                         <button 
                             type="submit"
-                            class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200">
                             Sign Up
                         </button>
+
+                        <!-- Terms and Conditions -->
+                        <p class="text-sm text-gray-500 text-center mt-4">
+                            By signing up, you agree to our 
+                            <a href="#" class="text-green-600 hover:text-green-800">Terms and Conditions</a>
+                        </p>
                     </div>
                 </form>
             </div>

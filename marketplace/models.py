@@ -16,14 +16,18 @@ class Log(models.Model):
 
 class SocialMediaAccount(models.Model):
     SOCIAL_MEDIA_CHOICES = [
+        ('texting', 'Texting💬'),
         ('twitter', 'Twitter'),
         ('facebook', 'Facebook'),
         ('instagram', 'Instagram'),
+        ('snapchat', 'Snapchat'),
+        ('reddit', 'Reddit'),
         ('tiktok', 'TikTok'),
         ('vpn', 'VPN'),
         ('tools', 'Tools'),
         ('email', 'Email'),
         ('streaming', 'Streaming'),
+        ('others', 'Others'),
     ]
 
     VERIFICATION_STATUS_CHOICES = [

@@ -35,9 +35,8 @@
 {% comment %} <meta name="facebook-domain-verification" content="your_verification_code"> {% endcomment %}
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval';">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <!-- Fixed: Changed script to link for CSS -->
+    <script src="{% static 'cdn.min.js' %}" defer></script>
+    <link href="{% static 'tailwind.min.css' %}" rel="stylesheet">
     
     <style>
         /* Custom transitions */
