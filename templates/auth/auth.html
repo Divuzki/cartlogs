@@ -26,6 +26,12 @@
             </div>
         </div>
     </header>
+{% comment %} get success from url ?reset=success {% endcomment %}
+     {% if param == 'success' %}
+        <div class="text-green-500 text-center mb-4">
+            Password reset successful
+        </div>
+    {% endif %}
 
     <div class="min-h-[calc(100vh-120px)] flex items-center justify-center">
         <div class="max-w-md w-full mx-4" x-data="{ 
@@ -112,13 +118,13 @@
                 <div class="flex mb-8 bg-gray-100 rounded-lg p-1">
                     <button 
                         @click="isLogin = true" 
-                        :class="isLogin ? 'bg-white shadow-sm' : 'text-gray-500'"
+                        :class="isLogin ? 'bg-green-200 shadow-sm' : 'text-gray-400'"
                         class="flex-1 py-2 rounded-lg text-center transition-all duration-200">
                         Login
                     </button>
                     <button 
                         @click="isLogin = false"
-                        :class="!isLogin ? 'bg-white shadow-sm' : 'text-gray-500'"
+                        :class="!isLogin ? 'bg-green-200 shadow-sm' : 'text-gray-400'"
                         class="flex-1 py-2 rounded-lg text-center transition-all duration-200">
                         Sign Up
                     </button>
@@ -149,6 +155,11 @@
                                 class="mt-1 block w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                                 required>
                             <span x-show="errors.password" x-text="errors.password" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        {% comment %} forget password {% endcomment %}
+                        <div class="text-sm text-green-600 hover:underline w-full flex justify-end">
+                            <a href="{% url 'forget_passwords' %}" class="text-sm text-green-600 hover:underline">Forgot Password?</a>
                         </div>
 
                         <button 
