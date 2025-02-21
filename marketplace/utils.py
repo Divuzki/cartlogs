@@ -79,7 +79,6 @@ class ProcessPayment:
         order_price = Decimal(order_price) / 100
 
         # get the order from the database
-        print(reference)
         order_qs: list[Order] = (
             Order.objects.select_related("user")
             .filter(payment_reference=reference)
@@ -109,43 +108,26 @@ class ProcessPayment:
             order.save()
 
             logs_list = []
-
-            
-
             order_items: list[OrderItem] = OrderItem.objects.filter(order=order)
-            social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(id__in=[item.account.id for item in order_items])
-            for account in social_media_accounts:
-                
+            for order_item in order_items:
+                account: SocialMediaAccount = order_item.account
+                order_qty = order_item.quantity
+
+                # get the logs related to this account and mark them as inactive
+                logs = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:order_qty]
+                logs_list.extend([log.log_data for log in logs])
+
+                # mark the logs as inactive
+                logs.update(is_active=False)
+
                 # if the account has reached 0 stock, mark it as inactive
                 if account.stock == 0:
                     account.is_active = False
                     account.save()
 
-                # get the order item and quantity
-                order_item: OrderItem = order_items.get(account=account)
-                order_qty = order_item.quantity
-
-                # get the log related to this account and mark it as inactive
-                log = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:order_qty].first()
-                if not log:
-                    # send an email to the user
-                    print("No Logs Left")
-                    email = EmailMessage(
-                        "No Logs Left",
-                        f"No Logs Left\n\n{account.title}, {account.social_media}, ID: {account.id}. Please contact the admin.",
-                        settings.EMAIL_HOST_USER,
-                        [order.user.email],
-                    )
-                    email.send()
-                    continue
-                logs_list.append(log.log_data)
-                log.is_active = False
-                log.save()
-                account.save()
-
             # send the logs_list to the user by email
             email = EmailMessage(
-                "Logs From Cart Logs",
+                "Logs From CartLogs",
                 f"Logs\n\n{logs_list}",
                 settings.EMAIL_HOST_USER,
                 [order.user.email],
