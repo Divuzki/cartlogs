@@ -119,9 +119,11 @@ class ProcessPayment:
                 # if the account has reached 0 stock, mark it as inactive
                 if account.stock == 0:
                     account.is_active = False
+
+                order_qty = sum(item.quantity for item in order_items)
                     
                 # get the log related to this account and mark it as inactive
-                log = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:1].first()
+                log = Log.objects.filter(account=account, is_active=True).order_by("-timestamp")[:order_qty].first()
                 if not log:
                     # send an email to the user
                     print("No Logs Left")
