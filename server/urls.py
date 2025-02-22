@@ -13,5 +13,5 @@ urlpatterns = [
     path('auth/request-otp/', request_otp, name='request_otp'),
     path('auth/reset-password/', reset_password, name='reset_password'),
     path('auth/forget-passwords/', forget_passwords, name='forget_passwords'),
-
+    path('disclaimer/', disclaimer, name='disclaimer'),
 ]

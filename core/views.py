@@ -188,3 +188,6 @@ def reset_password(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'errors': {'general': str(e)}})
+
+def disclaimer(request):
+    return render(request, 'disclaimer.html')
