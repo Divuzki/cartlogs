@@ -272,6 +272,14 @@ PAYMENT_GATEWAYS = settings.PAYMENT_GATEWAYS
 def add_funds(request):
     return render(request, 'add_funds.html')
 
+def caluate_gateway_fee(order_price):
+        gateway_fee = 0
+        if order_price <= 2500:
+            gateway_fee = 100
+        elif order_price > 2500:
+            gateway_fee = order_price * Decimal(0.025) + 100
+        return gateway_fee
+
 @login_required
 @require_http_methods(["POST"])
 def initiate_payment(request):
@@ -295,7 +303,7 @@ def initiate_payment(request):
 
         # Convert amount to kobo/cents as required by payment gateways
         amount_in_kobo = int(amount * 100)
-        fee = (amount * 0.015) + 100
+        fee = caluate_gateway_fee(amount)
         fee_in_kobo = int(fee * 100)
 
         amount_in_kobo += fee_in_kobo
