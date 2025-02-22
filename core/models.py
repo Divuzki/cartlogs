@@ -5,7 +5,14 @@ from django.dispatch import receiver
 from numerize.numerize import numerize
 
 class Transaction(models.Model):
+    TRANSACTION_STATUS_CHOICES = (
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+        ('pending', 'Pending'),
+        ('refunded', 'Refunded'),
+    )
     wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=TRANSACTION_STATUS_CHOICES, default='pending')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -19,9 +26,14 @@ class Wallet(models.Model):
 
     def __str__(self):
         return self.user.username
-
+    
+    @property
     def display_balance(self):
-        return
+        return numerize(self.balance)
+
+    @property
+    def total_spent(self):
+        return Transaction.objects.filter(wallet=self).aggregate(models.Sum('amount'))['amount__sum'] or 0
 
     def add_funds(self, amount):
         self.balance += amount
@@ -39,18 +51,17 @@ class Wallet(models.Model):
 
 
 
-# signals to create transaction when wallet balance is updated
+# signals to create transaction when wallet balance gets debited or credited
 @receiver(post_save, sender=Wallet)
 def create_transaction(sender, instance, created, **kwargs):
-    if created or instance.balance > 0:
-        Transaction.objects.create(wallet=instance, amount=instance.balance, description="Initial balance")
-        instance.balance = 0
-        instance.save() 
-    
-    if instance.balance < 0:
-        Transaction.objects.create(wallet=instance, amount=instance.balance, description="Withdrawal")
-        instance.balance = 0
-        instance.save()
+    if created:
+        Transaction.objects.create(wallet=instance, amount=0.00, description="Initial balance")
+    else:
+        if instance.balance > 0:
+            Transaction.objects.create(wallet=instance, amount=instance.balance, description="Credited")
+        elif instance.balance < 0:
+            Transaction.objects.create(wallet=instance, amount=abs(instance.balance), description="Debited")
+
 
 @receiver(post_save, sender=User)
 def create_wallet(sender, instance, created, **kwargs):

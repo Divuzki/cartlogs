@@ -6,6 +6,7 @@ import json
 from .models import SocialMediaAccount, Order, OrderItem
 from numerize.numerize import numerize
 
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.encoding import force_bytes
 from django.conf import settings
@@ -80,11 +81,9 @@ def marketplace(request):
 
     return render(request, 'marketplace.html', {'grouped_accounts': grouped_accounts})
 
+@login_required
 @require_POST
 def checkout(request):
-    # check if user is authenticated, if not redirect to login page
-    if not request.user.is_authenticated:
-        return redirect('auth_page')
     
     if request.method != 'POST':
         return JsonResponse({
@@ -193,11 +192,9 @@ def caluate_gateway_fee(order_price):
             gateway_fee = order_price * Decimal(0.025) + 100
         return gateway_fee
 
+@login_required
 @require_GET
 def after_checkout(request, order_id):
-    # Check if user is authenticated, if not redirect to login page
-    if not request.user.is_authenticated:
-        return redirect('auth_page')
 
     order: Order = Order.objects.get(id=order_id)
 

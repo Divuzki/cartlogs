@@ -27,7 +27,21 @@
 
     <div class="min-h-[calc(100vh-120px)] flex items-center justify-center">
         <div class="max-w-md w-full mx-4" x-data="">
-            
+            <div class="space-y-6 flex flex-col justify-center items-center">
+                {% comment %} user icon {% endcomment %}
+                <svg width="78" height="78" viewBox="0 0 78 78" fill="none" xmlns="http://www.w3.org/2000/svg" style="font-size: 12.6px;">
+                    <circle opacity="0.150087" cx="39" cy="39" r="39" fill="#10113D" style="font-size: 12.6px;"></circle>
+                    <path d="M38.994 44.7993C30.3363 44.7993 22.9412 46.1643 22.9412 51.6243C22.9412 57.0863 30.2901 58.4995 38.994 58.4995C47.6517 58.4995 55.0468 57.1365 55.0468 51.6745C55.0468 46.2125 47.6999 44.7993 38.994 44.7993Z" fill="#2ec551" style="font-size: 12.6px;"></path>
+                    <path opacity="0.4" d="M38.9939 39.599C44.8915 39.599 49.6169 34.8717 49.6169 28.9761C49.6169 23.0805 44.8915 18.3532 38.9939 18.3532C33.0983 18.3532 28.371 23.0805 28.371 28.9761C28.371 34.8717 33.0983 39.599 38.9939 39.599Z" fill="#2ec551" style="font-size: 12.6px;"></path>
+                </svg>
+                {% comment %} username and email {% endcomment %}
+                <div class="text-center">
+                    <p class="text-xl font-semibold text-gray-800">{{ request.user.username }}</p>
+                    <p class="text-gray-600">{{ request.user.email }}</p>
+                </div>
+                {% comment %} update password {% endcomment %}
+                <a href="{% url 'change_password' %}" class="text-blue-500 hover:underline">Change Password</a>
+            </div>
         </div>
     </div>
 </body>

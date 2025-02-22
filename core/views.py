@@ -3,7 +3,8 @@ import json
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -18,7 +19,11 @@ def auth_page(request):
 
     # check if reset=success is in the url
     param = request.GET.get('reset')
-    return render(request, 'auth/auth.html', {'param': param})
+    next = request.GET.get('next')
+    if not next:
+        next = '/'
+        
+    return render(request, 'auth/auth.html', {'param': param, 'next': next})
 
 @require_http_methods(["POST"])
 def login_view(request):
@@ -195,14 +200,62 @@ def reset_password(request):
     except Exception as e:
         return JsonResponse({'success': False, 'errors': {'general': str(e)}})
 
-def disclaimer(request):
-    return render(request, 'disclaimer.html')
+@login_required
+@require_http_methods(["POST", "GET"])
+def change_password(request):
+    try:
+        if request.method == 'GET':
+            return render(request, 'auth/change_password.html')
+        
+        data = json.loads(request.body)
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+        
+        # Validate current password
+        if not request.user.check_password(current_password):
+            return JsonResponse({
+                'success': False,
+                'errors': {'current_password': 'Current password is incorrect'}
+            })
+        
+        # Validate password match
+        if new_password != confirm_password:
+            return JsonResponse({
+                'success': False,
+                'errors': {'confirm_password': 'Passwords do not match'}
+            })
+        
+        # Update password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Update session to prevent logout
+        update_session_auth_hash(request, request.user)
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'errors': {'general': 'An error occurred while changing password'}
+        })
 
-def orders(request):
-    return render(request, 'orders.html')
-
+@login_required
+@require_http_methods(["GET"])
 def profile(request):
     return render(request, 'profile.html')
 
+@require_http_methods(["GET"])
+def disclaimer(request):
+    return render(request, 'disclaimer.html')
+
+@login_required
+@require_http_methods(["GET"])
+def orders(request):
+    return render(request, 'orders.html')
+
+@login_required
+@require_http_methods(["GET"])
 def add_funds(request):
     return render(request, 'add_funds.html')

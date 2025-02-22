@@ -86,7 +86,13 @@
                     
                     const data = await response.json();
                     if (data.success) {
+                    {% comment %} check if there is a next= parameter in the url {% endcomment %}
+                    const next = new URLSearchParams(window.location.search).get('next');
+                    if (next) {
+                        window.location.href = next;
+                    } else {
                         window.location.href = data.redirect_url;
+                    }
                     } else {
                         this.errors = data.errors || {};
                     }

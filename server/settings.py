@@ -22,6 +22,8 @@ USE_S3 = os.getenv("USE_S3", "False") == "True"
 
 ALLOWED_HOSTS = ["*"]
 
+LOGIN_URL = "/auth/"
+
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 
 CSRF_COOKIE_SECURE = DEBUG == False
