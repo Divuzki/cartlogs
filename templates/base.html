@@ -54,6 +54,7 @@
     <div class="p-4" x-data="{
         cart: [],
         isCartOpen: false,
+        isMenuOpen: false,
         processing: false,
 
         notification: { show: false, message: '' },
@@ -107,7 +108,7 @@
         get totalAmount() {
             return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         }
-    }" @keydown.escape="isCartOpen = false">
+    }" @keydown.escape="isCartOpen = false" @keydown.escape="isMenuOpen = false">
         <!-- Notification Toast -->
         <div 
             x-show="notification.show"

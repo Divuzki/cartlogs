@@ -4,6 +4,7 @@
 <div 
     x-data="{
         isCartOpen: false,
+        isMenuOpen: false,
         cart: [],
         accounts: [
             {% for account in accounts %}
@@ -97,6 +98,7 @@
         }
     }"
     @keydown.escape="isCartOpen = false"
+    @keydown.escape="isMenuOpen = false"
     class="min-h-screen bg-gray-100"
 >
     <div class="max-w-6xl mx-auto">
@@ -206,6 +208,9 @@
 
             <!-- Include Cart Sidebar Component -->
             {% include 'components/cart_sidebar.html' %}
+
+            <!-- Include Menu Sidebar Component -->
+            {% include 'components/menu_sidebar.html' %}
         </div>
     </div>
 
