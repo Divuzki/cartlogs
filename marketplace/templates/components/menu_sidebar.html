@@ -4,7 +4,7 @@
     x-transition:leave-end="-translate-x-full"
     class="fixed top-0 left-0 h-full sm:w-96 w-full bg-white shadow-lg overflow-y-auto z-20"
     @click.away="isMenuOpen = false" x-cloak>
-    <div class="p-6">
+    <div class="p-6 flex flex-col h-full">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold opacity-0">Menu</h2>
             <button @click="isMenuOpen = false" class="text-gray-500 hover:text-gray-700">
@@ -15,7 +15,7 @@
             </button>
         </div>
 
-        <ul class="space-y-2">
+        <ul class="space-y-2 h-full">
             <li><a href="{% url 'disclaimer' %}" class="block p-3 hover:bg-gray-200"><svg width="129" height="20"
                         viewBox="0 0 129 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="font-size: 12.6px;">
                         <!-- Shield Icon -->
@@ -98,7 +98,14 @@
 
         <!-- bottom signup/login button -->
         <div class="mt-auto p-3">
-            <a href="{% url 'auth_page' %}" class="block w-full p-3 text-center text-white bg-blue-600 rounded">Sign Up</a>
+            <a href="{% url 'auth_page' %}" class="block p-3 hover:bg-gray-200 flex justify-start items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" style="transition: rotate(180deg);" width="129" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M20 12C20 7.58172 16.4183 4 12 4M12 20C14.5264 20 16.7792 18.8289 18.2454 17" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M4 12H14M14 12L11 9M14 12L11 15" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                
+                </svg>
+                <span class="ml-2">Login</span>
+            </a>
         </div>
     </div>
 </div>
