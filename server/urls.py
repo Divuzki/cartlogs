@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from core.views import auth_page, login_view, signup_view, request_otp, reset_password, forget_passwords
+from core.views import auth_page, login_view, signup_view, request_otp, reset_password, forget_passwords, disclaimer
 
 urlpatterns = [
     path('admin/', admin.site.urls),
