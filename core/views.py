@@ -197,3 +197,12 @@ def reset_password(request):
 
 def disclaimer(request):
     return render(request, 'disclaimer.html')
+
+def orders(request):
+    return render(request, 'orders.html')
+
+def profile(request):
+    return render(request, 'profile.html')
+
+def add_funds(request):
+    return render(request, 'add_funds.html')

@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Cartlogs</title>
+    <link rel="icon" type="image/png" href="{% static 'favicon.ico' %}" />
+    <script src="{% static 'cdn.min.js' %}" defer></script>
+    <link href="{% static 'tailwind.min.css' %}" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-green-50 to-indigo-50 min-h-screen">
+    <!-- Header -->
+    <header class="w-full bg-white shadow-sm py-4 px-6 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-start gap-4">
+            <a href="/" class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <div class="flex items-center space-x-2">
+                <span class="text-xl font-semibold text-gray-800">My Orders</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="min-h-[calc(100vh-120px)] flex items-center justify-center">
+        <div class="max-w-md w-full mx-4" x-data="">
+            
+        </div>
+    </div>
+</body>
+</html>
