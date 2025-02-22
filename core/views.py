@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -46,6 +46,12 @@ def login_view(request):
             'success': False,
             'errors': {'general': 'Invalid credentials'}
         })
+
+def logout_view(request):
+    """Handle logout"""
+    if request.user.is_authenticated:
+        logout(request)
+    return redirect('auth_page')
 
 @require_http_methods(["POST"])
 def signup_view(request):

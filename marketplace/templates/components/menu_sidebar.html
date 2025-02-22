@@ -2,9 +2,9 @@
     x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
     x-transition:leave="transform transition-transform duration-300" x-transition:leave-start="translate-x-0"
     x-transition:leave-end="-translate-x-full"
-    class="fixed top-0 left-0 h-full sm:w-96 w-full bg-white shadow-lg overflow-y-auto z-20"
+    class="fixed top-0 left-0 h-full sm:w-96 w-[76%] bg-white shadow-lg overflow-y-auto z-20"
     @click.away="isMenuOpen = false" x-cloak>
-    <div class="p-6 flex flex-col h-full">
+    <div class="p-6 flex flex-col">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold opacity-0">Menu</h2>
             <button @click="isMenuOpen = false" class="text-gray-500 hover:text-gray-700">
@@ -96,16 +96,26 @@
                     </svg></a></li>
         </ul>
 
-        <!-- bottom signup/login button -->
-        <div class="mt-auto p-3">
-            <a href="{% url 'auth_page' %}" class="block p-3 hover:bg-gray-200 flex justify-start items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" style="transition: rotate(180deg);" width="129" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M20 12C20 7.58172 16.4183 4 12 4M12 20C14.5264 20 16.7792 18.8289 18.2454 17" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-                    <path d="M4 12H14M14 12L11 9M14 12L11 15" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                
+    </div>
+    <!-- bottom signup/login button -->
+    <div class="mt-auto p-3 absolute bottom-0">
+        {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="block p-3 hover:bg-gray-200 flex justify-start items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 3H9C4 3 4 8 4 8V16C4 16 4 21 9 21H15C20 21 20 16 20 16V8C20 8 20 3 15 3Z" stroke="red" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 16L12 11M12 11L7 16M12 11V21" stroke="red" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="ml-2">Login</span>
+                <span class="ml-2">Logout</span>
             </a>
-        </div>
+        {% else %}
+        <a href="{% url 'auth_page' %}" class="block p-3 hover:bg-gray-200 flex justify-start items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" style="transition: rotate(180deg);" width="24" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 12C20 7.58172 16.4183 4 12 4M12 20C14.5264 20 16.7792 18.8289 18.2454 17" stroke="green" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M4 12H14M14 12L11 9M14 12L11 15" stroke="green" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            </svg>
+            <span class="ml-2">Login</span>
+        </a>
+        {% endif %}
     </div>
 </div>
