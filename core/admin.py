@@ -3,7 +3,7 @@ from .models import Wallet, Transaction
 
 class TransactionInline(admin.TabularInline):
     model = Transaction
-    readonly_fields = ('wallet', 'amount', 'description', 'status', 'created_at')
+    readonly_fields = ('wallet', 'amount', 'type', 'created_at')
     extra = 0
 
 class WalletAdmin(admin.ModelAdmin):

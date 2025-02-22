@@ -26,8 +26,140 @@
     </header>
 
     <div class="min-h-[calc(100vh-120px)] flex items-center justify-center">
-        <div class="max-w-md w-full mx-4" x-data="">
-            
+        <div class="max-w-md w-full mx-4" x-data="{ 
+            isLoading: false,
+            selectedGateway: null,
+            amount: '',
+            errors: {},
+            formatAmount(value) {
+                value = value.replace(/[^\d]/g, '');
+                if (value) {
+                    const num = parseInt(value);
+                    return num.toLocaleString('en-NG');
+                }
+                return '';
+            },
+            async initiatePayment() {
+                if (!this.selectedGateway || !this.amount) {
+                    this.errors = {
+                        general: 'Please select a payment method and enter an amount'
+                    };
+                    return;
+                }
+                
+                this.isLoading = true;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                try {
+                    const response = await fetch('/initiate-payment/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            gateway: this.selectedGateway,
+                            amount: parseFloat(this.amount.replace(/,/g, ''))
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success && data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        this.errors = data.errors || { general: 'Payment initialization failed' };
+                    }
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    this.errors = { general: 'An error occurred while processing payment' };
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        }">
+            <!-- Card Container -->
+            <div class="bg-white rounded-xl shadow-xl p-8">
+                <!-- Title -->
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800">Add Funds to Wallet</h2>
+                    <p class="text-gray-600 mt-2">Select payment method and enter amount</p>
+                </div>
+
+                <!-- csrf_token -->
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                <!-- General Error Message -->
+                <div x-show="errors.general" class="mb-4 p-3 bg-red-50 text-red-500 text-sm text-center rounded-md" x-text="errors.general"></div>
+
+                <!-- Amount Input -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">₦</span>
+                        </div>
+                        <input 
+                            type="text" 
+                            x-model="amount"
+                            @input="amount = formatAmount($event.target.value)"
+                            class="focus:ring-green-500 focus:border-green-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+                            placeholder="0">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Minimum amount: ₦1,000</p>
+                    <span x-show="errors.amount" x-text="errors.amount" class="text-red-500 text-sm"></span>
+                </div>
+
+                <!-- Payment Method Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button 
+                            @click="selectedGateway = 'paystack'"
+                            :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'paystack'}"
+                            class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none">
+                            <div class="flex flex-col items-center justify-center space-y-2">
+                                <img 
+                                    src="{% static 'icons/paystack.svg' %}" 
+                                    alt="Paystack"
+                                    class="h-8 w-auto"
+                                >
+                                {% comment %} <span class="text-sm font-medium">Paystack</span> {% endcomment %}
+                            </div>
+                        </button>
+                        <button 
+                            @click="selectedGateway = 'flutterwave'"
+                            :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'flutterwave'}"
+                            class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <div class="flex flex-col items-center justify-center space-y-2">
+                                <img 
+                                    src="{% static 'icons/flutterwave.svg' %}" 
+                                    alt="Flutterwave"
+                                    class="h-8 w-auto"
+                                >
+                                {% comment %} <span class="text-sm font-medium">Flutterwave</span> {% endcomment %}
+                            </div>
+                        </button>
+                    </div>
+                    <span x-show="errors.gateway" x-text="errors.gateway" class="text-red-500 text-sm"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    @click="initiatePayment"
+                    :disabled="isLoading || !selectedGateway || !amount"
+                    class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                    <svg x-show="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="isLoading ? 'Processing...' : 'Add Funds'"></span>
+                </button>
+
+                <!-- Safety Notice -->
+                <p class="mt-4 text-sm text-gray-500 text-center">
+                    Your payment information is securely processed by your selected payment provider.
+                </p>
+            </div>
         </div>
     </div>
 </body>

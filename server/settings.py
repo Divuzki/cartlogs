@@ -24,6 +24,19 @@ ALLOWED_HOSTS = ["*"]
 
 LOGIN_URL = "/auth/"
 
+PAYMENT_GATEWAYS = {
+    'paystack': {
+        'name': 'Paystack',
+        'min_amount': 1000,  # 100 Naira minimum
+        'max_amount': 10000000,  # 10 million Naira maximum
+    },
+    'flutterwave': {
+        'name': 'Flutterwave',
+        'min_amount': 1000,  # 100 Naira minimum
+        'max_amount': 10000000,  # 10 million Naira maximum
+    }
+}
+
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 
 CSRF_COOKIE_SECURE = DEBUG == False
