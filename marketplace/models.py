@@ -16,7 +16,8 @@ class Log(models.Model):
 
 class SocialMediaAccount(models.Model):
     SOCIAL_MEDIA_CHOICES = [
-        ('special_stock','OJ’s SPECIAL STOCK🌚💯'),
+        # in a tupe [0] is the value and [1] is the display
+        ('OJ’s SPECIAL STOCK🌚💯','OJ’s SPECIAL STOCK🌚💯'),
         ('texting', 'Texting💬'),
         ('twitter', 'Twitter'),
         ('facebook', 'Facebook'),
