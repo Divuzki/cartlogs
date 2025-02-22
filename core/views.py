@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
-from .utils import ProcessPaystackPayment
+from .utils import ProcessPaystackPayment, caluate_gateway_fee
 import requests
 import time
 from django.views.decorators.csrf import csrf_exempt
@@ -271,14 +271,6 @@ PAYMENT_GATEWAYS = settings.PAYMENT_GATEWAYS
 @login_required
 def add_funds(request):
     return render(request, 'add_funds.html')
-
-def caluate_gateway_fee(order_price):
-        gateway_fee = 0
-        if order_price <= 2500:
-            gateway_fee = 100
-        elif order_price > 2500:
-            gateway_fee = order_price * Decimal(0.025) + 100
-        return gateway_fee
 
 @login_required
 @require_http_methods(["POST"])

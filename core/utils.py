@@ -6,6 +6,13 @@ from .models import Wallet, Transaction
 from django.conf import settings
 from django.core.mail import EmailMessage
 
+def caluate_gateway_fee(order_price):
+    gateway_fee = 0
+    if order_price <= 2500:
+        gateway_fee = 100
+    elif order_price > 2500:
+        gateway_fee = order_price * Decimal(0.025) + 100
+    return gateway_fee
 
 class ProcessPaystackPayment:
     """
@@ -76,7 +83,7 @@ class ProcessPaystackPayment:
         wallet: Wallet = transaction.wallet
         
         # minus the payment gateway fee of 1.5% + 100naira
-        fee = (amount * 0.015) + 100
+        fee = caluate_gateway_fee(amount)
         amount = amount - fee
 
         # convert amount to Decimal
