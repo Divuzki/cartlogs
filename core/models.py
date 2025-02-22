@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from numerize.numerize import numerize
 
 class Transaction(models.Model):
     wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE)
@@ -18,6 +19,9 @@ class Wallet(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    def display_balance(self):
+        return
 
     def add_funds(self, amount):
         self.balance += amount
