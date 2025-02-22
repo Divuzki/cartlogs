@@ -18,7 +18,7 @@ class SocialMediaAccount(models.Model):
     SOCIAL_MEDIA_CHOICES = [
         # in a tupe [0] is the value and [1] is the display
         ('OJ’s SPECIAL STOCK🌚💯','OJ’s SPECIAL STOCK🌚💯'),
-        ('texting', 'Texting💬'),
+        ('Texting💬', 'Texting💬'),
         ('twitter', 'Twitter'),
         ('facebook', 'Facebook'),
         ('instagram', 'Instagram'),
