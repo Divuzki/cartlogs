@@ -20,10 +20,6 @@
                 </svg>
                 
             </a>
-            <div class="flex items-center space-x-2">
-                <img src="{% static 'logos/apple-touch-icon.png' %}" alt="Logo" class="w-8 h-8"/>
-                <span class="text-xl font-semibold text-gray-800">Cartlogs</span>
-            </div>
         </div>
     </header>
 {% comment %} get success from url ?reset=success {% endcomment %}
@@ -102,6 +98,17 @@
         }">
             <!-- Card Container -->
             <div class="bg-white rounded-xl shadow-xl p-8">
+                <div class="flex items-center justify-center w-full space-x-2 mb-5">
+                    <img src="{% static 'logos/apple-touch-icon.png' %}" alt="Logo" class="w-8 h-8"/>
+                    <span class="text-xl font-semibold text-gray-800 relative">Cartlogs
+
+                        <sub
+                        class="absolute -right-2 uppercase"
+                        style="font-size: 9px; font-weight: 600; color: #2c3e50;bottom: -0.2rem;"
+                        ><span class="text-green-500">Owned by</span> OJ</sub>
+                    </span>
+                    {% comment %} add owned by OJ bellow as a subtext {% endcomment %}
+                </div>
                 <!-- Welcome Message (Login) -->
                 <div x-show="isLogin" class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-800">Welcome Back!</h2>
