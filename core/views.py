@@ -77,6 +77,9 @@ def signup_view(request):
     password2 = data.get('password2')
     
     errors = {}
+
+    username = username.lower().strip()
+    email = email.lower().strip()
     
     # Validate input
     if not username:
