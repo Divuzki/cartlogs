@@ -19,7 +19,7 @@ from marketplace.models import Order
 import hmac
 import hashlib
 from django.utils.encoding import force_bytes
-
+from django.db.models import Sum
 import logging
 
 logger = logging.getLogger(__name__)
@@ -268,7 +268,10 @@ def change_password(request):
 @login_required
 @require_http_methods(["GET"])
 def profile(request):
-    return render(request, 'profile.html')
+    total_spent = Transaction.objects.filter(wallet=request.user.wallet, status='success').aggregate(Sum('amount'))['amount__sum'] or 0
+    # add comma
+    total_spent = format(total_spent, ',')
+    return render(request, 'profile.html', {'total_spent': total_spent})
 
 @require_http_methods(["GET"])
 def disclaimer(request):
