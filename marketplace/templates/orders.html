@@ -11,15 +11,17 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- Header -->
-    <header class="w-full bg-white shadow-sm py-4 px-6 mb-8">
-        <div class="max-w-7xl mx-auto flex items-center justify-start gap-4">
-            <a href="/" class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </a>
-            <div class="flex items-center justify-between w-full space-x-2">
-                <span class="text-xl font-semibold text-gray-800">My Orders</span>
+    <header class="w-full bg-white shadow-sm py-4 px-4 sm:px-6 mb-6 sm:mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="/" class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                <span class="text-lg sm:text-xl font-semibold text-gray-800">My Orders</span>
+            </div>
+            <div class="flex-shrink-0">
                 {% include 'wallet_balance.html' %}
             </div>
         </div>
@@ -27,14 +29,14 @@
 
     <div class="max-w-7xl mx-auto px-4">
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div class="bg-white rounded-lg shadow p-4">
-                <div class="text-gray-600">Total Orders</div>
-                <div class="text-2xl font-semibold">{{ total_orders }}</div>
+                <div class="text-gray-600 text-sm">Total Orders</div>
+                <div class="text-xl sm:text-2xl font-semibold mt-1">{{ total_orders }}</div>
             </div>
             <div class="bg-white rounded-lg shadow p-4">
-                <div class="text-gray-600">Total Spent</div>
-                <div class="text-2xl font-semibold">{{ total_spent|floatformat:2 }}</div>
+                <div class="text-gray-600 text-sm">Total Spent</div>
+                <div class="text-xl sm:text-2xl font-semibold mt-1">₦{{ total_spent|floatformat:2 }}</div>
             </div>
         </div>
 
@@ -43,45 +45,101 @@
             <div class="relative" x-data="{ search: '' }">
                 <input 
                     type="text" 
-                    placeholder="Search by Trx" 
+                    placeholder="Search by Order Number" 
                     class="w-full p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     x-model="search"
-                    @input="// Add your search logic here"
                 >
             </div>
         </div> {% endcomment %}
 
-        <!-- Transactions Table Header -->
-        <div class="bg-gray-900 text-white p-4 rounded-lg mb-4">
-            <div class="grid grid-cols-5 gap-4">
-                <div>ID</div>
-                <div>Date</div>
-                <div>Amount(NGN)</div>
-                <div>Qty</div>
-                <div>View</div>
-            </div>
-        </div>
-
-        <!-- Transaction Items -->
-        <div class="space-y-4">
-            {% for order in orders %}
-            <div class="bg-white rounded-lg p-4 shadow">
-                <div class="grid grid-cols-5 gap-4 items-center">
-                    <div>{{ order.id }}</div>
-                    <div class="text-gray-600">{{ order.created_at|timesince }} ago</div>
-                    <div>{{ order.total_amount|floatformat:2 }}</div>
-                    <div>{{ order.items.count }}</div>
-                    <div>
-                        <a href="{% url 'marketplace:order_details' order.id %}" class="p-2 bg-gray-800 text-white rounded-lg inline-block">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                    </div>
+        <!-- Orders List -->
+        <div class="bg-white rounded-lg mb-5 shadow overflow-hidden">
+            <!-- Table Header -->
+            <div class="bg-gray-900 text-white p-4">
+                <div class="hidden sm:grid sm:grid-cols-5 sm:gap-4">
+                    <div class="text-sm font-medium">Order #</div>
+                    <div class="text-sm font-medium">Date</div>
+                    <div class="text-sm font-medium">Amount</div>
+                    <div class="text-sm font-medium">Items</div>
+                    <div class="text-sm font-medium text-center">Actions</div>
                 </div>
             </div>
-            {% endfor %}
+
+            <!-- Orders -->
+            <div class="divide-y divide-gray-200">
+                {% for order in orders %}
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <!-- Mobile View -->
+                    <div class="sm:hidden space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-medium uppercase text-blue-600" 
+                                @click="window.location.href = '{% url 'marketplace:order_details' order.id %}'"
+                                >#{{ order.disp_order_number }}</div>
+                                <div class="text-sm text-gray-500">{{ order.created_at|timesince }} ago</div>
+                            </div>
+                            <a href="{% url 'marketplace:order_details' order.id %}" 
+                               class="p-2 bg-gray-800 text-white rounded-lg inline-flex items-center">
+                                <span class="mr-1">View</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Amount:</span>
+                            <span class="font-medium">₦{{ order.total_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Items:</span>
+                            <span>{{ order.items.count }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                {% if order.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif order.status == 'failed' %}bg-red-100 text-red-800
+                                {% elif order.status == 'processing' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ order.status|title }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Desktop View -->
+                    <div class="hidden sm:grid sm:grid-cols-5 sm:gap-4 sm:items-center">
+                        <div class="font-medium uppercase text-blue-600"
+                        @click="window.location.href = '{% url 'marketplace:order_details' order.id %}'"
+                        >#{{ order.disp_order_number }}</div>
+                        <div class="text-gray-600">{{ order.created_at|timesince }} ago</div>
+                        <div>₦{{ order.total_amount|floatformat:2 }}</div>
+                        <div>{{ order.items.count }}</div>
+                        <div class="flex items-center justify-center space-x-2">
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                {% if order.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif order.status == 'failed' %}bg-red-100 text-red-800
+                                {% elif order.status == 'processing' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ order.status|title }}
+                            </span>
+                            <a href="{% url 'marketplace:order_details' order.id %}" 
+                               class="p-2 bg-gray-800 text-white rounded-lg inline-flex items-center hover:bg-gray-700 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-gray-500">
+                    <p>No orders found</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </body>

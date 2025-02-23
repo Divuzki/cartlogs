@@ -99,6 +99,10 @@ class Order(models.Model):
             self.order_number = self.generate_order_number()
         super().save(*args, **kwargs)
 
+    @property
+    def disp_order_number(self):
+        return f"{self.order_number}".lower().replace('ord-', '')
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     account = models.ForeignKey(SocialMediaAccount, on_delete=models.CASCADE)
