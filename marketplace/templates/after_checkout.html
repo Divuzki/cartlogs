@@ -23,7 +23,7 @@
     </section>
     <section class="confirmation-message mb-6">
         {% if is_paid %}
-        <p class="text-lg text-gray-600">Your order has been paid. Check your email for the receipt and logs.</p>
+        <p class="text-lg text-gray-600">Your order has been paid. Check <a href="{% url 'marketplace:order_details' order.id %}" class="text-blue-600">here</a> to view your order details and logs.</p>
         {% else %}
         <p class="text-lg text-gray-600">Your order is ready for payment.</p>
         {% endif %}
