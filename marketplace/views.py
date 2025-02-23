@@ -10,6 +10,10 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib.auth import authenticate
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def view_all(request, social_media):
     # Fetch accounts from the database
@@ -245,7 +249,7 @@ def confirm_payment(request):
             'errors': {'general': 'Invalid request format'}
         }, status=400)
     except Exception as e:
-        print(e)
+        logging.error(e)
         return JsonResponse({
             'status': 'error',
             'errors': {'general': 'An unexpected error occurred'}
