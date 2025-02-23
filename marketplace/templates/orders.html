@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Cartlogs</title>
+    <link rel="icon" type="image/png" href="{% static 'favicon.ico' %}" />
+    <script src="{% static 'cdn.min.js' %}" defer></script>
+    <link href="{% static 'tailwind.min.css' %}" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="w-full bg-white shadow-sm py-4 px-6 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-start gap-4">
+            <a href="/" class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <div class="flex items-center justify-between w-full space-x-2">
+                <span class="text-xl font-semibold text-gray-800">My Orders</span>
+                {% include 'wallet_balance.html' %}
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="text-gray-600">Total Orders</div>
+                <div class="text-2xl font-semibold">{{ total_orders }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="text-gray-600">Total Spent</div>
+                <div class="text-2xl font-semibold">{{ total_spent|floatformat:2 }}</div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        {% comment %} <div class="mb-6">
+            <div class="relative" x-data="{ search: '' }">
+                <input 
+                    type="text" 
+                    placeholder="Search by Trx" 
+                    class="w-full p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    x-model="search"
+                    @input="// Add your search logic here"
+                >
+            </div>
+        </div> {% endcomment %}
+
+        <!-- Transactions Table Header -->
+        <div class="bg-gray-900 text-white p-4 rounded-lg mb-4">
+            <div class="grid grid-cols-5 gap-4">
+                <div>ID</div>
+                <div>Date</div>
+                <div>Amount(NGN)</div>
+                <div>Qty</div>
+                <div>View</div>
+            </div>
+        </div>
+
+        <!-- Transaction Items -->
+        <div class="space-y-4">
+            {% for order in orders %}
+            <div class="bg-white rounded-lg p-4 shadow">
+                <div class="grid grid-cols-5 gap-4 items-center">
+                    <div>{{ order.id }}</div>
+                    <div class="text-gray-600">{{ order.created_at|timesince }} ago</div>
+                    <div>{{ order.total_amount|floatformat:2 }}</div>
+                    <div>{{ order.items.count }}</div>
+                    <div>
+                        <a href="{% url 'marketplace:order_details' order.id %}" class="p-2 bg-gray-800 text-white rounded-lg inline-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

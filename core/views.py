@@ -274,11 +274,6 @@ def profile(request):
 def disclaimer(request):
     return render(request, 'disclaimer.html')
 
-@login_required
-@require_http_methods(["GET"])
-def orders(request):
-    return render(request, 'orders.html')
-
 PAYSTACK_SECRET_KEY: str = settings.PAYSTACK_SECRET_KEY
 
 PAYMENT_GATEWAYS = settings.PAYMENT_GATEWAYS

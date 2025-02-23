@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from decimal import Decimal
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
@@ -9,6 +9,9 @@ from core.models import Transaction, Wallet
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib.auth import authenticate
+
+from django.db.models import Sum
+
 
 import logging
 
@@ -77,6 +80,26 @@ def marketplace(request):
         })
 
     return render(request, 'marketplace.html', {'grouped_accounts': grouped_accounts})
+
+@login_required
+@require_http_methods(["GET"])
+def orders(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    total_orders = orders.count()
+    total_spent = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+
+    context = {
+        'orders': orders,
+        'total_orders': total_orders,
+        'total_spent': total_spent,
+    }
+    return render(request, 'orders.html', context)
+
+@login_required
+@require_http_methods(["GET"])
+def order_details(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'order_details.html', {'order': order})
 
 @login_required
 @require_POST

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from core.views import (auth_page, login_view, signup_view, request_otp, reset_password, 
-forget_passwords, change_password, disclaimer, logout_view, orders, profile, 
+forget_passwords, change_password, disclaimer, logout_view, profile, 
 add_funds, initiate_payment, paystack_webhook, flutterwave_webhook)
 
 urlpatterns = [
@@ -21,7 +21,6 @@ urlpatterns = [
     
     path('auth/logout/', logout_view, name='logout'),
 
-    path('orders/', orders, name='orders'),
     path('profile/', profile, name='profile'),
 
     path('add-funds/', add_funds, name='add_funds'),
