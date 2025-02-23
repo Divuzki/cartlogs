@@ -206,14 +206,19 @@ def confirm_payment(request):
         # Get the transaction
         try:
             transaction: Transaction = Transaction.objects.get(
-                payment_reference=order_number,
-                status='pending'
+                payment_reference=order_number
             )
         except Transaction.DoesNotExist:
             return JsonResponse({
                 'status': 'error',
-                'errors': {'general': 'Transaction not found'}
+                'errors': {'general': 'Transaction not found, Please try again'}
             }, status=404)
+
+        if transaction.status != 'pending':
+            return JsonResponse({
+                'status': 'error',
+                'errors': {'general': 'Transaction already processed or cancelled, Please try again'}
+            }, status=400)
 
         transaction_wallet: Wallet = transaction.wallet
 
@@ -226,18 +231,25 @@ def confirm_payment(request):
 
         # Process payment
         try:
-            with transaction.atomic():
-                # Deduct from wallet
-                transaction_wallet.debit(transaction.amount, transaction)
-                # Update payment status
-                transaction.status = 'success'
-                transaction.save()
+            # Deduct from wallet
+            transaction_wallet.debit(transaction.amount, transaction)
+
+            # get order
+            order: Order = Order.objects.get(order_number=order_number)
+
+            # allocate logs to each order item
+            for order_item in order.items.all():
+                order_item.get_allocated_logs()
+
+            order.status = 'completed'
+            order.save()
 
             return JsonResponse({
                 'status': 'success',
-                'redirect_url': reverse('wallet:payment_success', args=[order_number])
+                'redirect_url': reverse('marketplace:after_checkout', args=[order.id])
             })
         except Exception as e:
+            print(e)
             return JsonResponse({
                 'status': 'error',
                 'errors': {'general': 'Payment processing failed'}

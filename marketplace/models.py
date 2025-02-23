@@ -7,6 +7,7 @@ from core.models import Transaction
 
 
 class Log(models.Model):
+    order_item = models.ForeignKey("marketplace.OrderItem", on_delete=models.CASCADE, related_name='logs', null=True, blank=True, editable=False)
     account = models.ForeignKey("marketplace.SocialMediaAccount", on_delete=models.CASCADE)
     log_data = models.TextField()
     is_active = models.BooleanField(default=True)
@@ -111,3 +112,21 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.price
+
+    def get_allocated_logs(self):
+        if self.quantity <= 0:
+            return []
+
+        # check if the item already has allocated logs
+        if Log.objects.filter(order_item=self).exists():
+            return Log.objects.filter(order_item=self)
+
+        # allocate logs (quantity, for example 10 for 10 logs) to order item and mark them as inactive
+        new_logs = Log.objects.filter(account=self.account, is_active=True)[:self.quantity]
+        for log in new_logs:
+            log.order_item = self
+            log.is_active = False
+            log.save()
+        
+        return new_logs
+        
