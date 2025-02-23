@@ -280,7 +280,10 @@ PAYMENT_GATEWAYS = settings.PAYMENT_GATEWAYS
 
 @login_required
 def add_funds(request):
-    return render(request, 'add_funds.html')
+    transactions = Transaction.objects.filter(
+        wallet=request.user.wallet
+    ).order_by('-created_at')
+    return render(request, 'add_funds.html', {'transactions': transactions})
 
 @login_required
 @require_http_methods(["POST", "GET"])

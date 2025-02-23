@@ -1,0 +1,133 @@
+<!-- Transaction History Section -->
+<div class="bg-white rounded-xl shadow-xl overflow-hidden my-5">
+    <!-- Section Header with Stats -->
+    <div class="p-6 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-xl font-semibold text-gray-800">Transaction History</h2>
+            <div class="mt-4 sm:mt-0 flex flex-wrap gap-4">
+                <div class="text-sm">
+                    <span class="text-gray-500">Total Transactions:</span>
+                    <span class="font-semibold ml-1">{{ transactions.count }}</span>
+                </div>
+                <div class="text-sm">
+                    <span class="text-gray-500">Last Transaction:</span>
+                    <span class="font-semibold ml-1">
+                        {% if transactions.first %}
+                            {{ transactions.first.created_at|timesince }} ago
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    {% comment %} <div class="border-b border-gray-200 bg-gray-50" x-data="{ 
+        activeFilter: 'all',
+        setFilter(type) {
+            this.activeFilter = type;
+            // You can add filtering logic here
+        }
+    }">
+        <div class="p-4 flex gap-2 overflow-x-auto">
+            <button 
+                @click="setFilter('all')" 
+                :class="{'bg-gray-800 text-white': activeFilter === 'all', 'bg-white text-gray-600 hover:bg-gray-100': activeFilter !== 'all'}"
+                class="px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                All
+            </button>
+            <button 
+                @click="setFilter('credit')" 
+                :class="{'bg-green-600 text-white': activeFilter === 'credit', 'bg-white text-gray-600 hover:bg-gray-100': activeFilter !== 'credit'}"
+                class="px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                Credits
+            </button>
+            <button 
+                @click="setFilter('debit')" 
+                :class="{'bg-red-600 text-white': activeFilter === 'debit', 'bg-white text-gray-600 hover:bg-gray-100': activeFilter !== 'debit'}"
+                class="px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                Debits
+            </button>
+        </div>
+    </div> {% endcomment %}
+
+    <!-- Transactions List -->
+    <div class="divide-y divide-gray-200">
+        {% for transaction in transactions %}
+        <div class="p-4 hover:bg-gray-50 transition-colors">
+            <!-- Mobile View -->
+            <div class="sm:hidden space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-medium {% if transaction.type == 'credit' %}text-green-600{% elif transaction.type == 'debit' %}text-red-600{% else %}text-blue-600{% endif %}">
+                                {{ transaction.type|title }}
+                            </span>
+                            {% if transaction.payment_reference %}
+                            <span class="text-xs text-gray-500 uppercase">#{{ transaction.payment_reference }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">{{ transaction.created_at|timesince }} ago</div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="font-medium text-sm {% if transaction.type == 'credit' %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if transaction.type == 'credit' %}+{% else %}-{% endif %}₦{{ transaction.amount|floatformat:2 }}
+                        </span>
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if transaction.status == 'success' %}bg-green-100 text-green-800
+                            {% elif transaction.status == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ transaction.status|title }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop View -->
+            <div class="hidden sm:grid sm:grid-cols-5 sm:gap-4 sm:items-center">
+                <div>
+                    <div class="font-medium {% if transaction.type == 'credit' %}text-green-600{% elif transaction.type == 'debit' %}text-red-600{% else %}text-blue-600{% endif %}">
+                        {{ transaction.type|title }}
+                    </div>
+                    {% if transaction.payment_reference %}
+                    <div class="text-xs text-gray-500 mt-1 uppercase">#{{ transaction.payment_reference }}</div>
+                    {% endif %}
+                </div>
+                <div class="font-medium {% if transaction.type == 'credit' %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if transaction.type == 'credit' %}+{% else %}-{% endif %}₦{{ transaction.amount|floatformat:2 }}
+                </div>
+                <div>
+                    <span class="px-2 py-1 text-xs rounded-full 
+                        {% if transaction.status == 'success' %}bg-green-100 text-green-800
+                        {% elif transaction.status == 'pending' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ transaction.status|title }}
+                    </span>
+                </div>
+                <div class="text-gray-600 text-sm">{{ transaction.created_at|timesince }} ago</div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-8 text-center">
+            <div class="text-gray-400">
+                <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+            </div>
+            <p class="mt-4 text-gray-500">No transactions found</p>
+            <p class="mt-2 text-sm text-gray-400">Your transaction history will appear here</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% comment %} {% if transactions %}
+    <!-- Load More Button -->
+    <div class="p-4 bg-gray-50 border-t border-gray-200">
+        <button class="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+            Load More
+        </button>
+    </div>
+    {% endif %} {% endcomment %}
+</div>

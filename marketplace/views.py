@@ -86,7 +86,7 @@ def marketplace(request):
 def orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     total_orders = orders.count()
-    total_spent = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_spent = orders.filter(status="completed").aggregate(Sum('total_amount'))['total_amount__sum'] or 0
 
     context = {
         'orders': orders,
