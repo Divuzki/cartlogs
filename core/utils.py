@@ -11,7 +11,7 @@ def caluate_gateway_fee(order_price):
     if order_price <= 2500:
         gateway_fee = 100
     elif order_price > 2500:
-        gateway_fee = order_price * Decimal(0.025) + 100
+        gateway_fee = Decimal(order_price) * Decimal(0.025) + 100
     return gateway_fee
 
 class ProcessPaystackPayment:

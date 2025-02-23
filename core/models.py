@@ -65,7 +65,6 @@ class Wallet(models.Model):
         Raises:
             ValueError: if the new balance is less than 0
         """
-        print("crediting wallet", self, amount)
         if self.balance + amount < 0:
             raise ValueError("Insufficient funds")
         self.balance += amount

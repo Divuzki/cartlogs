@@ -13,12 +13,17 @@ from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from .utils import ProcessPaystackPayment, caluate_gateway_fee
 import requests
-import time
 from django.views.decorators.csrf import csrf_exempt
 from core.models import Wallet, Transaction
+from marketplace.models import Order
 import hmac
 import hashlib
 from django.utils.encoding import force_bytes
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 @ensure_csrf_cookie
 def auth_page(request):
@@ -283,8 +288,23 @@ def add_funds(request):
     return render(request, 'add_funds.html')
 
 @login_required
-@require_http_methods(["POST"])
+@require_http_methods(["POST", "GET"])
 def initiate_payment(request):
+
+    if request.method == 'GET':
+        trxref = request.GET.get('trxref')
+        if not trxref:
+            return redirect('add_funds')
+        
+        try:
+            transaction = Transaction.objects.get(payment_reference=trxref)
+            # check if the transaction is linked to a order
+            if Order.objects.filter(transaction=transaction).exists():
+                return redirect('marketplace:after_checkout', order_id=transaction.order.id)
+            return redirect('add_funds')
+        except Transaction.DoesNotExist:
+            return redirect('add_funds')
+
     try:
         data = json.loads(request.body)
         amount = float(data.get('amount', 0))
@@ -316,6 +336,7 @@ def initiate_payment(request):
             return initiate_flutterwave_payment(request, amount_in_kobo)
             
     except Exception as e:
+        logger.error(e)
         return JsonResponse({
             'success': False,
             'errors': {'general': 'An error occurred while processing payment'}
@@ -338,7 +359,7 @@ def initiate_paystack_payment(request, amount_in_kobo):
         data = {
             'email': request.user.email,
             'amount': amount_in_kobo,
-            'callback_url': f'{site_url}{next_url}',
+            'callback_url': f'{site_url}{next_url}'.replace('//', '/'),
         }
         
         response = requests.post(
@@ -359,14 +380,13 @@ def initiate_paystack_payment(request, amount_in_kobo):
                     'redirect_url': response_data['authorization_url']
                 })
         else:
-            print(response.json())
             return JsonResponse({
                 'success': False,
                 'errors': {'general': 'Failed to initialize payment'}
             })
             
     except Exception as e:
-        print(e)
+        logger.error(e)
         return JsonResponse({
             'success': False,
             'errors': {'general': 'An error occurred while initializing payment'}
@@ -390,7 +410,7 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
             # 'tx_ref': f'wallet-{request.user.id}-{int(time.time())}',
             'amount': amount_in_kobo / 100,  # Flutterwave uses actual amount
             'currency': 'NGN',
-            'redirect_url': f'{site_url}{next_url}',
+            'redirect_url': f'{site_url}{next_url}'.replace('//', '/'),
             'customer': {
                 'email': request.user.email,
                 'name': f'{request.user.first_name} {request.user.last_name}'
