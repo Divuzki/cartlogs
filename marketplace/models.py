@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 import uuid
+from core.models import Transaction
 
 
 class Log(models.Model):
@@ -77,20 +78,11 @@ class Order(models.Model):
         ('refunded', 'Refunded'),
     ]
 
-    PAYMENT_STATUS = [
-        ('pending', 'Pending'),
-        ('paid', 'Paid'),
-        ('failed', 'Failed'),
-        ('refunded', 'Refunded'),
-    ]
-
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     order_number = models.CharField(max_length=20, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
+    transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=50, blank=True)
-    payment_reference = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -119,16 +111,3 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.price
-
-class Payment(models.Model):
-    order = models.ForeignKey(Order, related_name='payments', on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=50)
-    transaction_id = models.CharField(max_length=100, unique=True)
-    status = models.CharField(max_length=20)
-    payment_data = models.JSONField(default=dict)  # Stores payment gateway response
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Payment {self.transaction_id} for Order {self.order.order_number}"

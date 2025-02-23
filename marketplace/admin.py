@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SocialMediaAccount, Order, OrderItem, Payment, Log
+from .models import SocialMediaAccount, Order, OrderItem, Log
 
 class SocialMediaAccountAdmin(admin.ModelAdmin):
     list_display = ('social_media', 'title', 'followers_count', 'price', 'is_active')
@@ -33,5 +33,4 @@ class LogAdmin(admin.ModelAdmin):
 admin.site.register(SocialMediaAccount, SocialMediaAccountAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem, OrderItemAdmin)
-admin.site.register(Payment, PaymentAdmin)
 admin.site.register(Log, LogAdmin)

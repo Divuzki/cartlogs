@@ -1,16 +1,14 @@
 from django.shortcuts import render, redirect
 from decimal import Decimal
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 import json
 from .models import SocialMediaAccount, Order, OrderItem
 from numerize.numerize import numerize
-
+from core.models import Transaction, Wallet
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
-
-
-PAYSTACK_SECRET_KEY = settings.PAYSTACK_SECRET_KEY
+from django.urls import reverse
+from django.contrib.auth import authenticate
 
 
 def view_all(request, social_media):
@@ -129,63 +127,7 @@ def checkout(request):
             'message': str(e)
         }, status=400)
 
-import requests
-from django.conf import settings  # To access environment variables
 
-def generate_payment_link(callback_url, amount, email):
-    url = "https://api.paystack.co/transaction/initialize"
-    headers = {
-        "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "email": email,
-        "amount": str(int(amount * 100)),  # Paystack expects amount in kobo
-        "callback_url": callback_url,
-        "metadata": {
-            "cancel_action": callback_url
-        }
-    }
-
-    response = requests.post(url, headers=headers, json=data)
-    
-    if response.status_code == 200:
-        data = response.json().get('data', {})
-        return data.get('authorization_url'), data.get('reference')  # Return both URL and reference
-    else:
-        # Handle error appropriately
-        return None, None
-
-def verify_payment(reference):
-    """
-    #!/bin/sh
-url="https://api.paystack.co/transaction/verify/{reference}"
-authorization="Authorization: Bearer YOUR_SECRET_KEY"
-
-curl "$url" -H "$authorization" -X GET
-    """
-    url = f"https://api.paystack.co/transaction/verify/{reference}"
-    headers = {
-        "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    response = requests.get(url, headers=headers)
-    
-    if response.status_code == 200:
-        data = response.json().get('data', {})
-        return data['status']
-    else:
-        # Handle error appropriately
-        return None
-
-def caluate_gateway_fee(order_price):
-        gateway_fee = 0
-        if order_price <= 2500:
-            gateway_fee = 100
-        elif order_price > 2500:
-            gateway_fee = order_price * Decimal(0.025) + 100
-        return gateway_fee
 
 @login_required
 @require_GET
@@ -194,30 +136,138 @@ def after_checkout(request, order_id):
     order: Order = Order.objects.get(id=order_id)
 
     # check of user has already paid for the order
-    if order.payment_status == 'paid':
+    if order.status == 'completed':
         return render(request, 'after_checkout.html', {'order': order, 'is_paid': True})
 
-    if order.payment_reference:
-        # verify the payment
-        payment_status = verify_payment(order.payment_reference)
-        if payment_status == 'success':
-            order.payment_status = 'paid'
-            order.save()
-            return render(request, 'after_checkout.html', {'order': order, 'is_paid': True})
+
+    # site_url = request.build_absolute_uri('/')
+    # callback_url = site_url + 'after_checkout/' + str(order_id) + '/'
+    if not order.transaction:
+        order.status = 'pending'
+        order.save()
+
+
+    return render(request, 'after_checkout.html', {'order': order})
+
+@login_required
+def password_confirm(request, order_number):
+    """
+    Display the password confirmation page for a payment
+    """
+    try:
         
+        order: Order = Order.objects.get(order_number=order_number)
 
-    site_url = request.build_absolute_uri('/')
-    callback_url = site_url + 'after_checkout/' + str(order_id) + '/'
-    
-    # Initialize payment link
-    order_total = order.total_amount + caluate_gateway_fee(order.total_amount)
-    payment_link, payment_reference = generate_payment_link(callback_url, order_total, request.user.email)
+        if not order.transaction:
+            new_pending_transaction: Transaction = Transaction.objects.create(
+                payment_reference = order.order_number,
+                payment_gateway = 'wallet',
+                wallet = order.user.wallet,
+                type = 'debit',
+                amount = order.total_amount,
+                description = "Pending payment for order #{}".format(order.order_number),
+            )
+            new_pending_transaction.save()
+            order.transaction = new_pending_transaction
+            order.status = 'processing'
+            order.save()
+        
+        context = {
+            'amount': order.total_amount,
+            'order_number': order.order_number
+        }
+        return render(request, 'confirm_payment.html', context)
+    except Order.DoesNotExist:
+        return redirect('marketplace:payment_error')
 
-    # Save the payment reference in the order
-    order.payment_reference = payment_reference
-    order.save()
+@login_required
+@require_http_methods(["POST"])
+def confirm_payment(request):
+    """
+    Handle the transaction confirmation
+    """
+    try:
+        data = json.loads(request.body)
+        password = data.get('password')
+        order_number = data.get('order_number')
+        user = request.user
 
+        # Verify password
+        if not authenticate(username=user.username, password=password):
+            return JsonResponse({
+                'status': 'error',
+                'errors': {'password': 'Incorrect password'}
+            }, status=400)
 
-    return render(request, 'after_checkout.html', {'order': order, 'payment_link': payment_link})
+        # Get the transaction
+        try:
+            transaction: Transaction = Transaction.objects.get(
+                payment_reference=order_number,
+                status='pending'
+            )
+        except Transaction.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'errors': {'general': 'Transaction not found'}
+            }, status=404)
 
+        transaction_wallet: Wallet = transaction.wallet
 
+        # Check wallet balance
+        if transaction_wallet.balance < transaction.amount:
+            return JsonResponse({
+                'status': 'error',
+                'errors': {'general': 'Insufficient Funds in Wallet, Please Topup'}
+            }, status=400)
+
+        # Process payment
+        try:
+            with transaction.atomic():
+                # Deduct from wallet
+                transaction_wallet.debit(transaction.amount, transaction)
+                # Update payment status
+                transaction.status = 'success'
+                transaction.save()
+
+            return JsonResponse({
+                'status': 'success',
+                'redirect_url': reverse('wallet:payment_success', args=[order_number])
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'errors': {'general': 'Payment processing failed'}
+            }, status=500)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'errors': {'general': 'Invalid request format'}
+        }, status=400)
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            'status': 'error',
+            'errors': {'general': 'An unexpected error occurred'}
+        }, status=500)
+
+@login_required
+def cancel_order(request, order_number):
+    """
+    Cancel a order
+    """
+    try:
+        order = Order.objects.get(
+            order_number=order_number,
+            user=request.user
+        )
+        order.status = 'cancelled'
+        order.save()
+
+        # make order.transaction as cancelled
+        order.transaction.status = 'cancelled'
+        order.transaction.save()
+
+        return redirect('marketplace:payment_cancelled')
+    except Order.DoesNotExist:
+        return redirect('marketplace:payment_error')

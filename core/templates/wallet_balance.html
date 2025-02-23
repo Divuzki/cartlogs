@@ -1,1 +1,10 @@
-<div class="font-medium"><span class="text-green-500 mr-1">₦</span><span>{{request.user.wallet.display_balance}}</span></div>
+<div class="font-medium flex items-center"><span class="text-green-500 mr-1">₦</span><span>{{request.user.wallet.display_balance}}</span>
+    {% if show_add_funds_link %}
+    <a href="{% url 'add_funds' %}?next={{request.path}}" class="relative p-3 hover:bg-gray-200 text-green-500 rounded-full transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        <span class="sr-only">Top Up</span>
+    </a>
+    {% endif %}
+</div>

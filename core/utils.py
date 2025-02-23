@@ -92,4 +92,4 @@ class ProcessPaystackPayment:
         wallet.credit(amount, transaction)
         wallet.save()
         
-        return HttpResponse(status=200)
+        return HttpResponse("Charge Success", status=200)

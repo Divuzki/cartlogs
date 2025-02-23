@@ -30,7 +30,7 @@
     </section>
     {% if not is_paid %}
     <section class="call-to-action">
-        <a href="{{payment_link}}" class="btn bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300">Pay Now</a>
+        <a href="{% url 'marketplace:password_confirm' order.order_number %}" class="btn bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300">Pay Now</a>
     </section>
     {% endif %}
 </main>

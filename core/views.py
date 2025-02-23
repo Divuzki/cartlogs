@@ -322,6 +322,11 @@ def initiate_payment(request):
         })
 
 def initiate_paystack_payment(request, amount_in_kobo):
+    # get next url
+    next_url = request.GET.get('next')
+    if not next_url:
+        next_url = request.path
+    
     try:
         headers = {
             'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}',
@@ -333,7 +338,7 @@ def initiate_paystack_payment(request, amount_in_kobo):
         data = {
             'email': request.user.email,
             'amount': amount_in_kobo,
-            'callback_url': f'{site_url}payment/paystack/callback/',
+            'callback_url': f'{site_url}{next_url}',
         }
         
         response = requests.post(
@@ -368,6 +373,11 @@ def initiate_paystack_payment(request, amount_in_kobo):
         })
 
 def initiate_flutterwave_payment(request, amount_in_kobo):
+    # get next url
+    next_url = request.GET.get('next')
+    if not next_url:
+        next_url = request.path
+
     try:
         headers = {
             'Authorization': f'Bearer {settings.FLUTTERWAVE_SECRET_KEY}',
@@ -380,7 +390,7 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
             # 'tx_ref': f'wallet-{request.user.id}-{int(time.time())}',
             'amount': amount_in_kobo / 100,  # Flutterwave uses actual amount
             'currency': 'NGN',
-            'redirect_url': f'{site_url}payment/flutterwave/callback/',
+            'redirect_url': f'{site_url}{next_url}',
             'customer': {
                 'email': request.user.email,
                 'name': f'{request.user.first_name} {request.user.last_name}'

@@ -4,9 +4,6 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from numerize.numerize import numerize
-from django.conf import settings
-
-PAYMENT_GATEWAYS_TUPLE = tuple(settings.PAYMENT_GATEWAYS.items())
 
 class Transaction(models.Model):
     TRANSACTION_TYPE_CHOICES = (
@@ -22,12 +19,19 @@ class Transaction(models.Model):
         ('failed', 'Failed'),
     )
 
-    payment_reference = models.CharField(max_length=100, blank=True, null=True)
+    TRANSACTION_PAYMENT_GATEWAY_CHOICES = (
+        ('unknown', 'Unknown'),
+        ('paystack', 'Paystack'),
+        ('flutterwave', 'Flutterwave'),
+        ('wallet', 'Wallet'),
+    )
 
-    payment_gateway = models.CharField(max_length=20, choices=PAYMENT_GATEWAYS_TUPLE, default='unknown')
+    payment_reference = models.CharField(max_length=100, blank=True, null=True, editable=False, unique=True)
 
-    wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE)
-    type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='unknown')
+    payment_gateway = models.CharField(max_length=20, choices=TRANSACTION_PAYMENT_GATEWAY_CHOICES, default='unknown', editable=False)
+
+    wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE, editable=False)
+    type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='unknown', editable=False)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
