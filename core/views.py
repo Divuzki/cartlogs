@@ -40,12 +40,19 @@ def login_view(request):
     data = json.loads(request.body)
     username = data.get('username')
     password = data.get('password')
+
+    username = username.lower().strip()
     
     if not username or not password:
         return JsonResponse({
             'success': False,
             'errors': {'general': 'Please provide both username and password'}
         })
+
+    # check if username is email and check if email exists
+    user_qs = User.objects.filter(email=username)
+    if user_qs.exists():
+        username = user_qs.first().username
     
     user = authenticate(username=username, password=password)
     
