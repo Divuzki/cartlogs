@@ -76,6 +76,9 @@ class ProcessPaystackPayment:
         reference = self.event_data["reference"]
         amount = float(self.event_data["amount"]) / 100  # Convert from kobo to naira
         
+        # convert amount to Decimal
+        amount = Decimal(amount)
+       
         # Get transaction
         transaction = Transaction.objects.get(payment_reference=reference)
         
@@ -85,9 +88,6 @@ class ProcessPaystackPayment:
         # minus the payment gateway fee of 1.5% + 100naira
         fee = caluate_gateway_fee(amount)
         amount = amount - fee
-
-        # convert amount to Decimal
-        amount = Decimal(amount)
 
         wallet.credit(amount, transaction)
         wallet.save()
