@@ -11,8 +11,8 @@ def caluate_gateway_fee(order_price):
     if order_price <= 2500:
         gateway_fee = 100
     elif order_price > 2500:
-        gateway_fee = Decimal(order_price) * Decimal(0.025) + 100
-    return gateway_fee
+        gateway_fee = int(Decimal(order_price) * Decimal(0.025) + 100)
+    return Decimal(gateway_fee)
 
 class ProcessPaystackPayment:
     """
@@ -72,24 +72,18 @@ class ProcessPaystackPayment:
         return HttpResponse("Charge Dispute Resolve", status=200)
 
     def charge_success(self):
-        # Get reference and amount
-        reference = self.event_data["reference"]
-        amount = float(self.event_data["amount"]) / 100  # Convert from kobo to naira
-        
-        # convert amount to Decimal
-        amount = Decimal(amount)
-       
-        # Get transaction
-        transaction = Transaction.objects.get(payment_reference=reference)
-        
-        # Get wallet
-        wallet: Wallet = transaction.wallet
-        
-        # minus the payment gateway fee of 1.5% + 100naira
-        fee = caluate_gateway_fee(amount)
-        amount = amount - fee
-
-        wallet.credit(amount, transaction)
-        wallet.save()
-        
-        return HttpResponse("Charge Success", status=200)
+        try:
+            # Get reference and amount
+            reference = self.event_data["reference"]
+            
+            # Get transaction
+            transaction: Transaction = Transaction.objects.get(payment_reference=reference)
+   
+            # Get wallet
+            wallet: Wallet = transaction.wallet
+            wallet.credit(transaction.amount, transaction)
+            wallet.save()
+            
+            return HttpResponse("Charge Success", status=200)
+        except Exception as e:
+            return HttpResponse("Charge Failed", status=500)

@@ -73,6 +73,7 @@ class Wallet(models.Model):
         if transaction:
             transaction.amount = amount
             transaction.status = 'success'
+            transaction.description = "Credited"
             transaction.save()
         else:
             # create transaction
@@ -97,6 +98,7 @@ class Wallet(models.Model):
         if transaction:
             transaction.amount = amount
             transaction.status = 'success'
+            transaction.description = "Debited"
             transaction.save()
         else:
             # create transaction

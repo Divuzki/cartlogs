@@ -306,10 +306,17 @@ def initiate_payment(request):
             return redirect('add_funds')
 
     try:
+        if request.user.wallet:
+            pass
+    except Wallet.DoesNotExist:
+        # create wallet
+        Wallet.objects.create(user=request.user)
+        
+    try:
         data = json.loads(request.body)
         amount = float(data.get('amount', 0))
         gateway = data.get('gateway')
-        
+
         if gateway not in PAYMENT_GATEWAYS:
             return JsonResponse({
                 'success': False,
@@ -325,10 +332,6 @@ def initiate_payment(request):
 
         # Convert amount to kobo/cents as required by payment gateways
         amount_in_kobo = int(amount * 100)
-        fee = caluate_gateway_fee(amount)
-        fee_in_kobo = int(fee * 100)
-
-        amount_in_kobo += fee_in_kobo
 
         if gateway == 'paystack':
             return initiate_paystack_payment(request, amount_in_kobo)
@@ -343,6 +346,8 @@ def initiate_payment(request):
         })
 
 def initiate_paystack_payment(request, amount_in_kobo):
+    amount_in_naira = Decimal(amount_in_kobo / 100)
+
     # get next url
     next_url = request.GET.get('next')
     if not next_url:
@@ -356,10 +361,18 @@ def initiate_paystack_payment(request, amount_in_kobo):
 
         site_url = request.build_absolute_uri('/')
 
+        fee = caluate_gateway_fee(amount_in_naira)
+        fee_in_kobo = int(fee * 100)
+
+        call_back_url = f'{site_url}{next_url}'
+
+        # avoid double // between url and next_url without affect https://
+        call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
+
         data = {
             'email': request.user.email,
-            'amount': amount_in_kobo,
-            'callback_url': f'{site_url}{next_url}'.replace('//', '/'),
+            'amount': amount_in_kobo + fee_in_kobo,
+            'callback_url': call_back_url,
         }
         
         response = requests.post(
@@ -371,7 +384,6 @@ def initiate_paystack_payment(request, amount_in_kobo):
         if response.status_code == 200:
             response_data = response.json()['data']
             if response_data and response_data['authorization_url'] and response_data['reference']:
-                amount_in_naira = Decimal(amount_in_kobo / 100)
                 transaction = Transaction.objects.create(wallet=request.user.wallet, amount=amount_in_naira, type='credit', 
                 description="Pending Credit", payment_reference=response_data['reference'], payment_gateway='paystack')
                 transaction.save()
@@ -393,6 +405,7 @@ def initiate_paystack_payment(request, amount_in_kobo):
         })
 
 def initiate_flutterwave_payment(request, amount_in_kobo):
+    amount_in_naira = Decimal(amount_in_kobo / 100)
     # get next url
     next_url = request.GET.get('next')
     if not next_url:
@@ -406,11 +419,17 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
 
         site_url = request.build_absolute_uri('/')
 
+        fee = caluate_gateway_fee(amount_in_naira)
+
+        call_back_url = f'{site_url}{next_url}'
+
+        # avoid double // between url and next_url without affect https://
+        call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
+
         data = {
-            # 'tx_ref': f'wallet-{request.user.id}-{int(time.time())}',
-            'amount': amount_in_kobo / 100,  # Flutterwave uses actual amount
+            'amount': (amount_in_kobo / 100) + fee,  # Flutterwave uses actual amount
             'currency': 'NGN',
-            'redirect_url': f'{site_url}{next_url}'.replace('//', '/'),
+            'redirect_url': call_back_url,
             'customer': {
                 'email': request.user.email,
                 'name': f'{request.user.first_name} {request.user.last_name}'
@@ -429,7 +448,6 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
         if response.status_code == 200:
             response_data = response.json()
             if response_data and response_data['data'] and response_data['data']['link']:
-                amount_in_naira = Decimal(amount_in_kobo / 100)
                 transaction = Transaction.objects.create(wallet=request.user.wallet, amount=amount_in_naira, type='credit', 
                 description="Pending Credit", payment_reference=response_data['data']['reference'], payment_gateway='flutterwave')
                 transaction.save()
