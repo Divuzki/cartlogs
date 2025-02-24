@@ -283,9 +283,16 @@ PAYMENT_GATEWAYS = settings.PAYMENT_GATEWAYS
 
 @login_required
 def add_funds(request):
-    transactions = Transaction.objects.filter(
-        wallet=request.user.wallet
-    ).order_by('-created_at')
+    try:
+        transactions = Transaction.objects.filter(
+            wallet=request.user.wallet
+        ).order_by('-created_at')
+    except Wallet.DoesNotExist:
+        # create wallet
+        wallet = Wallet.objects.create(user=request.user)
+        transactions = Transaction.objects.filter(
+            wallet=wallet
+        ).order_by('-created_at')
     return render(request, 'add_funds.html', {'transactions': transactions})
 
 @login_required
