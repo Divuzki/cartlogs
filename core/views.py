@@ -436,7 +436,7 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
         call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
 
         data = {
-            'tx_ref': str(uuid.uuid4()),
+            'tx_ref': str(uuid.uuid4().hex[:8]),
             'amount': (amount_in_kobo / 100) + float(fee),  # Flutterwave uses actual amount
             'currency': 'NGN',
             'redirect_url': call_back_url,

@@ -41,7 +41,7 @@
         class="max-w-2xl w-full mx-4"
         x-data="{ 
             isLoading: false,
-            selectedGateway: null,
+            selectedGateway: 'flutterwave',
             amount: '',
             errors: {},
             formatAmount(value) {
@@ -153,7 +153,7 @@
               <button
                 @click="selectedGateway = 'paystack'"
                 :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'paystack'}"
-                class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                class="p-4 border rounded-lg hidden hover:border-green-500 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled
                 style="opacity: .5;"
               >
