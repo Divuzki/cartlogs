@@ -21,6 +21,7 @@ import hashlib
 from django.utils.encoding import force_bytes
 from django.db.models import Sum
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -435,7 +436,8 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
         call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
 
         data = {
-            'amount': (amount_in_kobo / 100) + fee,  # Flutterwave uses actual amount
+            'tx_ref': str(uuid.uuid4()),
+            'amount': (amount_in_kobo / 100) + float(fee),  # Flutterwave uses actual amount
             'currency': 'NGN',
             'redirect_url': call_back_url,
             'customer': {
@@ -457,7 +459,7 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
             response_data = response.json()
             if response_data and response_data['data'] and response_data['data']['link']:
                 transaction = Transaction.objects.create(wallet=request.user.wallet, amount=amount_in_naira, type='credit', 
-                description="Pending Credit", payment_reference=response_data['data']['reference'], payment_gateway='flutterwave')
+                description="Pending Credit", payment_reference=data.get('tx_ref'), payment_gateway='flutterwave')
                 transaction.save()
                 return JsonResponse({
                     'success': True,
@@ -470,6 +472,7 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
             })
             
     except Exception as e:
+        logger.error(e)
         return JsonResponse({
             'success': False,
             'errors': {'general': 'An error occurred while initializing payment'}
@@ -540,20 +543,30 @@ def flutterwave_webhook(request):
         return HttpResponse(status=400)
     
     # Process the webhook
-    payload = json.loads(request.body)
-    if payload['event'] == 'charge.completed' and payload['data']['status'] == 'successful':
-        try:
-            # Get amount and user_id
-            amount = float(payload['data']['amount'])
-            user_id = payload['data']['meta']['user_id']
-            
-            # Update wallet
-            wallet = Wallet.objects.get(user_id=user_id)
-            wallet.balance += amount
-            wallet.save()
-            
-            return HttpResponse(status=200)
-        except Exception as e:
-            return HttpResponse(status=500)
-    
-    return HttpResponse(status=200)
+    try:
+        payload = json.loads(request.body)
+        if payload['event'] == 'charge.completed' and payload['data']['status'] == 'successful':
+            try:
+                # Get transaction reference
+                reference = payload['data']['tx_ref']
+                
+                # Get transaction
+                transaction = Transaction.objects.get(payment_reference=reference)
+                
+                # Get wallet and credit it
+                wallet = transaction.wallet
+                wallet.credit(transaction.amount, transaction)
+                wallet.save()
+                
+                return HttpResponse(status=200)
+            except Transaction.DoesNotExist:
+                return HttpResponse('Transaction not found', status=404)
+            except Exception as e:
+                logger.error(f'Error processing Flutterwave webhook: {str(e)}')
+                return HttpResponse('Error processing payment', status=500)
+        
+        return HttpResponse(status=200)
+    except json.JSONDecodeError:
+        return HttpResponse('Invalid JSON', status=400)
+    except KeyError:
+        return HttpResponse('Invalid payload structure', status=400)
