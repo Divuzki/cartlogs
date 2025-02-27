@@ -56,6 +56,16 @@ FLUTTERWAVE_WEBHOOK_HASH = os.environ.get('FLUTTERWAVE_WEBHOOK_HASH')
 #     ("HTTP_X_FORWARDED_PROTO", "https") if (DEBUG == False) else None
 # )
 
+# CSRF and CORS Settings
+CSRF_TRUSTED_ORIGINS = [
+    "https://www.cartlogs.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000"
+]
+
+CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS
+CORS_ALLOW_CREDENTIALS = True
+
 # Application definition
 
 INSTALLED_APPS = [
