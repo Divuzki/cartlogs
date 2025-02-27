@@ -144,5 +144,7 @@ def create_wallet(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Transaction)
 def update_transaction(sender, instance, created, **kwargs):
-    if not created and instance.payment_gateway == 'manual' and instance.type =='credit' and instance.status =='success':
+    if not created and instance.payment_gateway == 'manual' and instance.type == 'credit' and instance.status == 'success' and not hasattr(instance, '_processing'):
+        instance._processing = True
         instance.wallet.credit(instance.amount, transaction=instance)
+        
