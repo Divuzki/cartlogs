@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-n^pi7+zdv-t9w!gc2707%206rh&o%4q5_x&f5vzc7pohgq(k76'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") != "True"
+DEBUG = os.getenv("DEBUG", "False") == "True"
 USE_S3 = os.getenv("USE_S3", "False") == "True"
 
 ALLOWED_HOSTS = ["*"]
@@ -46,15 +46,15 @@ PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY')
 FLUTTERWAVE_WEBHOOK_HASH = os.environ.get('FLUTTERWAVE_WEBHOOK_HASH')
 
-# CSRF_COOKIE_SECURE = DEBUG == False
-# SESSION_COOKIE_SECURE = DEBUG == False
-# SECURE_SSL_REDIRECT = DEBUG == False
-# SECURE_HSTS_SECONDS = 518400 if (DEBUG == False) else None
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = DEBUG == False
-# SECURE_HSTS_PRELOAD = DEBUG == False
-# SECURE_PROXY_SSL_HEADER = (
-#     ("HTTP_X_FORWARDED_PROTO", "https") if (DEBUG == False) else None
-# )
+CSRF_COOKIE_SECURE = DEBUG == False
+SESSION_COOKIE_SECURE = DEBUG == False
+SECURE_SSL_REDIRECT = DEBUG == False
+SECURE_HSTS_SECONDS = 518400 if (DEBUG == False) else None
+SECURE_HSTS_INCLUDE_SUBDOMAINS = DEBUG == False
+SECURE_HSTS_PRELOAD = DEBUG == False
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https") if (DEBUG == False) else None
+)
 
 # CSRF and CORS Settings
 CSRF_TRUSTED_ORIGINS = [
