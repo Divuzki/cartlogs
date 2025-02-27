@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center">Manual Bank Transfer</h1>
+        
+        <div class="mb-8">
+            <p class="text-gray-600 mb-4">Please transfer the amount of <span class="font-bold text-black">₦{{ amount }}</span> to the following bank account:</p>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-gray-600">Bank Name:</div>
+                    <div class="font-medium">OPay</div>
+                    
+                    <div class="text-gray-600">Account Number:</div>
+                    <div class="font-medium">7062603175</div>
+                    
+                    <div class="text-gray-600">Account Name:</div>
+                    <div class="font-medium">OJEI Judith</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        Please include your transaction reference <span class="font-medium">{{ reference }}</span> in the transfer description.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form id="confirmPaymentForm" class="space-y-4" x-data="{ isSubmitting: false, errorMessage: '' }">
+            {% csrf_token %}
+            <input type="hidden" name="reference" value="{{ reference }}">
+            
+            <div x-show="errorMessage" class="p-4 bg-red-50 text-red-600 rounded-md text-sm" x-text="errorMessage"></div>
+            
+            <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center" :disabled="isSubmitting">
+                <svg x-show="isSubmitting" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span x-text="isSubmitting ? 'Confirming payment...' : 'I have made the payment'"></span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirmPaymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const formData = {
+        isSubmitting: false,
+        errorMessage: ''
+    };
+    
+    // Get Alpine.js component
+    const component = Alpine.$data(form);
+    
+    try {
+        component.isSubmitting = true;
+        component.errorMessage = '';
+        
+        const response = await fetch('/confirm-manual-payment/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                reference: document.querySelector('[name=reference]').value
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            component.errorMessage = data.error || 'An error occurred while confirming the payment';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        component.errorMessage = 'Network error occurred. Please try again.';
+    } finally {
+        component.isSubmitting = false;
+    }
+});
+</script>
+{% endblock %}

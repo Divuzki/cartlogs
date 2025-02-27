@@ -24,6 +24,7 @@ class Transaction(models.Model):
         ('paystack', 'Paystack'),
         ('flutterwave', 'Flutterwave'),
         ('wallet', 'Wallet'),
+        ('manual', 'Manual Transfer'),
     )
 
     payment_reference = models.CharField(max_length=100, blank=True, null=True, editable=False, unique=True)
@@ -39,6 +40,12 @@ class Transaction(models.Model):
 
     def __str__(self):
         return self.wallet.user.username
+
+    class Meta:
+        ordering = ['-created_at']
+    @property
+    def display_amount(self):
+        return numerize(self.amount)
 
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -133,4 +140,9 @@ def create_wallet(sender, instance, created, **kwargs):
     if created:
         if not Wallet.objects.filter(user=instance).exists():
             Wallet.objects.create(user=instance)
-            instance.save() 
+            instance.save()
+
+@receiver(post_save, sender=Transaction)
+def update_transaction(sender, instance, created, **kwargs):
+    if not created and instance.payment_gateway == 'manual' and instance.type =='credit' and instance.status =='success':
+        instance.wallet.credit(instance.amount, transaction=instance)

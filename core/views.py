@@ -3,7 +3,7 @@ import random
 import json
 from django.conf import settings
 from django.core.mail import send_mail
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -22,8 +22,154 @@ from django.utils.encoding import force_bytes
 from django.db.models import Sum
 import logging
 import uuid
+from django.core.mail import EmailMessage
 
 logger = logging.getLogger(__name__)
+
+def manual_payment(request, reference):
+
+    # get transaction
+    try:
+        transaction = Transaction.objects.get(payment_reference=reference)
+        amount = transaction.amount
+
+        return render(request, 'manual_payment.html', {
+            'amount': amount,
+        'reference': reference
+        })
+    except Transaction.DoesNotExist:
+        return JsonResponse({
+          'success': False,
+            'errors': {'general': 'Transaction not found'}
+        })
+    
+
+def initiate_manual_payment(request, amount_in_kobo):
+    amount_in_naira = Decimal(amount_in_kobo / 100)
+    reference = str(uuid.uuid4().hex[:8])
+
+    if amount_in_naira < Decimal('1000'):
+        return JsonResponse({
+            'success': False,
+            'errors': {'amount': 'Minimum amount is ₦1,000'}
+        })
+
+    try:
+        # Create a pending transaction
+        transaction = Transaction.objects.create(
+            wallet=request.user.wallet,
+            amount=amount_in_naira,
+            type='credit',
+            description="Pending Manual Transfer",
+            payment_reference=reference,
+            payment_gateway='manual',
+            status='pending'
+        )
+        transaction.save()
+
+        # Cache the transaction reference for validation
+        cache_key = f'manual_payment_{reference}'
+        cache.set(cache_key, request.user.id, timeout=3600)  # 1 hour expiry
+
+        # return render(request, 'manual_payment.html', {
+        #     'amount': amount_in_naira,
+        #     'reference': reference
+        # })
+        return JsonResponse({
+                    'success': True,
+                    'redirect_url': reverse('manual_payment', kwargs={'reference': reference})
+                })
+
+    except Exception as e:
+        print(e)
+        logger.error(f'Error initiating manual payment: {str(e)}')
+        return JsonResponse({
+            'success': False,
+            'errors': {'general': 'An error occurred while initializing manual payment. Please try again.'}
+        })
+
+@require_http_methods(["POST"])
+def confirm_manual_payment(request):
+    try:
+        data = json.loads(request.body)
+        reference = data.get('reference')
+
+        if not reference:
+            return JsonResponse({
+                'success': False,
+                'error': 'Transaction reference is required'
+            })
+
+        # Validate transaction reference from cache
+        cache_key = f'manual_payment_{reference}'
+        cached_user_id = cache.get(cache_key)
+
+        if not cached_user_id or cached_user_id != request.user.id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid or expired transaction reference'
+            })
+
+        try:
+            transaction = Transaction.objects.select_for_update().get(
+                payment_reference=reference,
+                wallet__user=request.user,
+                status='pending'
+            )
+        except Transaction.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Transaction not found or already processed'
+            })
+
+        try:
+            # Send email notification with improved error handling
+            email = EmailMessage(
+                'New Manual Payment Confirmation',
+                f'A new manual payment has been confirmed:\n\n'
+                f'Reference: {reference}\n'
+                f'Amount: ₦{transaction.amount}\n'
+                f'User: {request.user.email}\n'
+                f'Time: {transaction.created_at}\n\n'
+                f'Please verify the payment and mark it as successful in the admin panel.',
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.ADMIN_EMAIL]
+            )
+            email.send(fail_silently=True)
+
+            # Clear the cache after successful processing
+            cache.delete(cache_key)
+
+            return JsonResponse({
+                'success': True,
+                'redirect_url': '/add-funds/'
+            })
+        except Exception as e:
+            logger.error(f'Error sending confirmation email: {str(e)}')
+            # Still return success even if email fails
+            return JsonResponse({
+                'success': True,
+                'redirect_url': '/add-funds/'
+            })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request format'
+        })
+    except Exception as e:
+        logger.error(f'Error confirming manual payment: {str(e)}')
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while confirming payment. Please try again.'
+        })
+
+    except Exception as e:
+        logger.error(e)
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while confirming payment'
+        })
 
 
 @ensure_csrf_cookie
@@ -346,9 +492,12 @@ def initiate_payment(request):
             return initiate_paystack_payment(request, amount_in_kobo)
         elif gateway == 'flutterwave':
             return initiate_flutterwave_payment(request, amount_in_kobo)
+        elif gateway == 'manual':
+            return initiate_manual_payment(request, amount_in_kobo)
             
     except Exception as e:
         logger.error(e)
+        print(e)
         return JsonResponse({
             'success': False,
             'errors': {'general': 'An error occurred while processing payment'}

@@ -42,6 +42,7 @@
         x-data="{ 
             isLoading: false,
             selectedGateway: 'flutterwave',
+            validGateways: ['flutterwave', 'manual'],
             amount: '',
             errors: {},
             formatAmount(value) {
@@ -53,10 +54,22 @@
                 return '';
             },
             async initiatePayment() {
-                if (!this.selectedGateway || !this.amount) {
-                    this.errors = {
-                        general: 'Please select a payment method and enter an amount'
-                    };
+                this.errors = {};
+                
+                if (!this.selectedGateway) {
+                    this.errors.gateway = 'Please select a payment method';
+                }
+                
+                if (!this.amount) {
+                    this.errors.amount = 'Please enter an amount';
+                } else {
+                    const numAmount = parseFloat(this.amount.replace(/,/g, ''));
+                    if (numAmount < 1000) {
+                        this.errors.amount = 'Minimum amount is ₦1,000';
+                    }
+                }
+                
+                if (Object.keys(this.errors).length > 0) {
                     return;
                 }
                 
@@ -84,7 +97,9 @@
                     }
                 } catch (error) {
                     console.error('Payment error:', error);
-                    this.errors = { general: 'An error occurred while processing payment' };
+                    this.errors = { 
+                        general: error.response?.data?.message || 'An error occurred while processing payment. Please try again.'
+                    };
                 } finally {
                     this.isLoading = false;
                 }
@@ -151,25 +166,6 @@
             >
             <div class="grid grid-cols-2 gap-4">
               <button
-                @click="selectedGateway = 'paystack'"
-                :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'paystack'}"
-                class="p-4 border rounded-lg hidden hover:border-green-500 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled
-                style="opacity: .5;"
-              >
-                <div
-                  class="flex flex-col items-center justify-center space-y-2"
-                >
-                  <img
-                    src="{% static 'icons/paystack.svg' %}"
-                    alt="Paystack"
-                    class="h-8 w-auto"
-                  />
-                  {% comment %}
-                  <span class="text-sm font-medium">Paystack</span> {% endcomment %}
-                </div>
-              </button>
-              <button
                 @click="selectedGateway = 'flutterwave'"
                 :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'flutterwave'}"
                 class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none"
@@ -183,7 +179,34 @@
                     class="h-8 w-auto"
                   />
                   {% comment %}
-                  <span class="text-sm font-medium">Flutterwave</span> {% endcomment %}
+                  <span class="text-sm font-medium">Flutterwave</span>
+                  {% endcomment %}
+                </div>
+              </button>
+              <button
+                @click="selectedGateway = 'manual'"
+                :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'manual'}"
+                class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none"
+              >
+                <div
+                  class="flex flex-col items-center justify-center space-y-2"
+                >
+                  <svg
+                    class="h-8 w-8 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    ></path>
+                  </svg>
+                  {% comment %}
+                  <span class="text-sm font-medium">Manual Bank Transfer</span>
+                  {% endcomment %}
                 </div>
               </button>
             </div>
