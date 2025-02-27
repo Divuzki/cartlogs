@@ -111,7 +111,7 @@ def confirm_manual_payment(request):
             })
 
         try:
-            transaction = Transaction.objects.select_for_update().get(
+            transaction = Transaction.objects.get(
                 payment_reference=reference,
                 wallet__user=request.user,
                 status='pending'
