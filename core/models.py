@@ -29,7 +29,7 @@ class Transaction(models.Model):
 
     payment_reference = models.CharField(max_length=100, blank=True, null=True, editable=False, unique=True)
 
-    payment_gateway = models.CharField(max_length=20, choices=TRANSACTION_PAYMENT_GATEWAY_CHOICES, default='unknown', editable=False)
+    payment_gateway = models.CharField(max_length=20, choices=TRANSACTION_PAYMENT_GATEWAY_CHOICES, default='unknown')
 
     wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE, editable=False)
     type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='unknown', editable=False)
