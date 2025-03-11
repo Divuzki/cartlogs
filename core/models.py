@@ -31,13 +31,13 @@ class Transaction(models.Model):
 
     payment_gateway = models.CharField(max_length=20, choices=TRANSACTION_PAYMENT_GATEWAY_CHOICES, default='unknown')
 
-    wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE, editable=False)
-    type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='unknown', editable=False)
+    wallet = models.ForeignKey("core.Wallet", on_delete=models.CASCADE)
+    type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='unknown')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=TRANSACTION_STATUS_CHOICES, default='pending')
-
+    
     def __str__(self):
         return self.wallet.user.username
 
@@ -52,7 +52,7 @@ class Wallet(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, editable=False)
 
     def __str__(self):
-        return self.user.username
+        return self.user.username + f" ({self.user.email})"
     
     @property
     def display_balance(self):
@@ -146,5 +146,8 @@ def create_wallet(sender, instance, created, **kwargs):
 def update_transaction(sender, instance, created, **kwargs):
     if not created and instance.payment_gateway == 'manual' and instance.type == 'credit' and instance.status == 'success' and not hasattr(instance, '_processing'):
         instance._processing = True
+        if instance.payment_reference is None:
+            import uuid
+            instance.payment_reference = str(uuid.uuid4().hex[:8])
         instance.wallet.credit(instance.amount, transaction=instance)
         
