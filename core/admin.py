@@ -6,7 +6,7 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ('wallet', 'type', 'amount', 'payment_gateway', 'status', 'created_at')
     list_filter = ('type', 'payment_gateway', 'status', 'created_at')
     search_fields = ('wallet__user__username', 'payment_reference', 'description')
-    readonly_fields = ('payment_reference', 'wallet', 'type')
+    readonly_fields = ('payment_reference')
     ordering = ('-created_at',)
 
     def mark_as_success(self, request, queryset):
