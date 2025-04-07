@@ -249,7 +249,8 @@ def confirm_payment(request):
         if transaction_wallet.balance < transaction.amount:
             return JsonResponse({
                 'status': 'error',
-                'errors': {'general': 'Insufficient Funds in Wallet, Please Topup'}
+                'redirect_url': reverse('add_funds'),
+                'errors': {'general': 'Insufficient Funds in Wallet, redirecting to topup page...'}
             }, status=400)
 
         # Process payment

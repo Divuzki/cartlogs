@@ -57,6 +57,11 @@
                     } else {
                         if (data.errors) {
                             this.errors = data.errors;
+                            if (data.redirect_url){
+                                setTimeout(function(){
+                                    window.location.href = data.redirect_url;
+                                }, 2000); // Delay for 2 seconds before redirecting
+                            }
                         } else {
                             this.errors.general = 'An error occurred during payment';
                         }
