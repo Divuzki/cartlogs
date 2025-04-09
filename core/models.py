@@ -21,8 +21,8 @@ class Transaction(models.Model):
 
     TRANSACTION_PAYMENT_GATEWAY_CHOICES = (
         ('unknown', 'Unknown'),
-        ('paystack', 'Paystack'),
-        ('flutterwave', 'Flutterwave'),
+        ('korapay', 'Korapay'),
+        ('etegram', 'Etegram'),
         ('wallet', 'Wallet'),
         ('manual', 'Manual Transfer'),
     )

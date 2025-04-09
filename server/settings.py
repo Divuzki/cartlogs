@@ -25,13 +25,13 @@ ALLOWED_HOSTS = ["*"]
 LOGIN_URL = "/auth/"
 
 PAYMENT_GATEWAYS = {
-    'paystack': {
-        'name': 'Paystack',
+    'etegram': {
+        'name': 'Etegram',
         'min_amount': 1000,  # 100 Naira minimum
         'max_amount': 10000000,  # 10 million Naira maximum
     },
-    'flutterwave': {
-        'name': 'Flutterwave',
+    'korapay': {
+        'name': 'Korapay',
         'min_amount': 1000,  # 100 Naira minimum
         'max_amount': 10000000,  # 10 million Naira maximum
     },
@@ -43,8 +43,8 @@ PAYMENT_GATEWAYS = {
 }
 
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
-FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY')
-FLUTTERWAVE_WEBHOOK_HASH = os.environ.get('FLUTTERWAVE_WEBHOOK_HASH')
+ETEGRAM_PUBLIC_KEY = os.environ.get('ETEGRAM_PUBLIC_KEY')
+ETEGRAM_PROJECT_ID = os.environ.get('ETEGRAM_PROJECT_ID')
 
 CSRF_COOKIE_SECURE = DEBUG == False
 SESSION_COOKIE_SECURE = DEBUG == False

@@ -490,8 +490,8 @@ def initiate_payment(request):
 
         if gateway == 'paystack':
             return initiate_paystack_payment(request, amount_in_kobo)
-        elif gateway == 'flutterwave':
-            return initiate_flutterwave_payment(request, amount_in_kobo)
+        elif gateway == 'etegram':
+            return initiate_etegram_payment(request, amount_in_kobo)
         elif gateway == 'manual':
             return initiate_manual_payment(request, amount_in_kobo)
             
@@ -562,7 +562,7 @@ def initiate_paystack_payment(request, amount_in_kobo):
             'errors': {'general': 'An error occurred while initializing payment'}
         })
 
-def initiate_flutterwave_payment(request, amount_in_kobo):
+def initiate_etegram_payment(request, amount_in_kobo):
     amount_in_naira = Decimal(amount_in_kobo / 100)
     # get next url
     next_url = request.GET.get('next')
@@ -571,8 +571,8 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
 
     try:
         headers = {
-            'Authorization': f'Bearer {settings.FLUTTERWAVE_SECRET_KEY}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {settings.ETEGRAM_PUBLIC_KEY}',
         }
 
         site_url = request.build_absolute_uri('/')
@@ -585,34 +585,33 @@ def initiate_flutterwave_payment(request, amount_in_kobo):
         call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
 
         data = {
-            'tx_ref': str(uuid.uuid4().hex[:8]),
-            'amount': (amount_in_kobo / 100) + float(fee),  # Flutterwave uses actual amount
-            'currency': 'NGN',
+            'projectID': settings.ETEGRAM_PROJECT_ID,
+            'publicKey': settings.ETEGRAM_PUBLIC_KEY,
+            'reference': str(uuid.uuid4().hex[:8]),
+            'amount': (amount_in_kobo / 100) + float(fee),  # Etegram uses actual amount
+            'email': request.user.email,
             'redirect_url': call_back_url,
-            'customer': {
-                'email': request.user.email,
-                'name': f'{request.user.first_name} {request.user.last_name}'
-            },
-            'meta': {
-                'user_id': request.user.id
-            }
+            'phone': '08065778026',
+            # 'phone': '08137274139',
+            'firstname': request.user.username,
+            'lastname': request.user.username,
         }
         
         response = requests.post(
-            'https://api.flutterwave.com/v3/payments',
+            f'https://api-checkout.etegram.com/api/transaction/initialize/{settings.ETEGRAM_PROJECT_ID}',
             headers=headers,
             json=data
         )
-        
-        if response.status_code == 200:
+
+        if response.status_code == 201:
             response_data = response.json()
-            if response_data and response_data['data'] and response_data['data']['link']:
+            if response_data and response_data['data'] and response_data['data']['authorization_url']:
                 transaction = Transaction.objects.create(wallet=request.user.wallet, amount=amount_in_naira, type='credit', 
-                description="Pending Credit", payment_reference=data.get('tx_ref'), payment_gateway='flutterwave')
+                description="Pending Credit", payment_reference=data.get('reference'), payment_gateway='etegram')
                 transaction.save()
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': response_data['data']['link']
+                    'redirect_url': response_data['data']['authorization_url']
                 })
         else:
             return JsonResponse({
@@ -682,40 +681,40 @@ def paystack_webhook(request):
 
 
 @csrf_exempt
-def flutterwave_webhook(request):
+def etegram_webhook(request):
+    print(request)
     if request.method != 'POST':
         return HttpResponse(status=405)
     
-    # Verify webhook signature
-    flw_signature = request.headers.get('verif-hash')
-    if not flw_signature or flw_signature != settings.FLUTTERWAVE_WEBHOOK_HASH:
-        return HttpResponse(status=400)
+  
     
     # Process the webhook
-    try:
-        payload = json.loads(request.body)
-        if payload['event'] == 'charge.completed' and payload['data']['status'] == 'successful':
-            try:
-                # Get transaction reference
-                reference = payload['data']['tx_ref']
-                
-                # Get transaction
-                transaction = Transaction.objects.get(payment_reference=reference)
-                
-                # Get wallet and credit it
-                wallet = transaction.wallet
-                wallet.credit(transaction.amount, transaction)
-                wallet.save()
-                
-                return HttpResponse(status=200)
-            except Transaction.DoesNotExist:
-                return HttpResponse('Transaction not found', status=404)
-            except Exception as e:
-                logger.error(f'Error processing Flutterwave webhook: {str(e)}')
-                return HttpResponse('Error processing payment', status=500)
-        
-        return HttpResponse(status=200)
-    except json.JSONDecodeError:
-        return HttpResponse('Invalid JSON', status=400)
-    except KeyError:
-        return HttpResponse('Invalid payload structure', status=400)
+    # try:
+    payload = json.loads(request.body)
+    _type = payload['type'] if payload['type'] else payload['data']['type']
+    status = payload['status'] if payload['status'] else payload['data']['status']
+    if _type == 'credit' and status == 'successful':
+        try:
+            # Get transaction reference
+            reference = payload['reference'] if payload['reference'] else payload['data']['reference']
+            
+            # Get transaction
+            transaction = Transaction.objects.get(payment_reference=reference)
+            
+            # Get wallet and credit it
+            wallet = transaction.wallet
+            wallet.credit(transaction.amount, transaction)
+            wallet.save()
+            
+            return HttpResponse(status=200)
+        except Transaction.DoesNotExist:
+            return HttpResponse('Transaction not found', status=404)
+        except Exception as e:
+            logger.error(f'Error processing Etegram webhook: {str(e)}')
+            return HttpResponse('Error processing payment', status=500)
+    
+    return HttpResponse(status=200)
+    # except json.JSONDecodeError:
+    #     return HttpResponse('Invalid JSON', status=400)
+    # except KeyError:
+    #     return HttpResponse('Invalid payload structure', status=400)

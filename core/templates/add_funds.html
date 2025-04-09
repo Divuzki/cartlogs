@@ -41,8 +41,8 @@
         class="max-w-2xl w-full mx-4"
         x-data="{ 
             isLoading: false,
-            selectedGateway: 'flutterwave',
-            validGateways: ['flutterwave', 'manual'],
+            selectedGateway: 'etegram',
+            validGateways: ['etegram', 'korapay', 'manual'],
             amount: '',
             errors: {},
             formatAmount(value) {
@@ -166,16 +166,16 @@
             >
             <div class="grid grid-cols-2 gap-4">
               <button
-                @click="selectedGateway = 'flutterwave'"
-                :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'flutterwave'}"
+                @click="selectedGateway = 'etegram'"
+                :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'etegram'}"
                 class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none"
               >
                 <div
                   class="flex flex-col items-center justify-center space-y-2"
                 >
                   <img
-                    src="{% static 'icons/flutterwave.svg' %}"
-                    alt="Flutterwave"
+                    src="{% static 'icons/Etegram.png' %}"
+                    alt="Etegram"
                     class="h-8 w-auto"
                   />
                   <span class="text-xs text-green-600">Instant Funding</span>
@@ -202,7 +202,7 @@
                       d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                     ></path>
                   </svg>
-                  <span class="text-xs text-gray-500">5-10 mins</span>
+                  <span class="text-xs text-gray-500">60 mins</span>
                 </div>
               </button>
             </div>
