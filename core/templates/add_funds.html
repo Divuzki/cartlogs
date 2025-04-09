@@ -41,7 +41,7 @@
         class="max-w-2xl w-full mx-4"
         x-data="{ 
             isLoading: false,
-            selectedGateway: 'etegram',
+            selectedGateway: 'manual',
             validGateways: ['etegram', 'korapay', 'manual'],
             amount: '',
             errors: {},
@@ -166,10 +166,11 @@
             >
             <div class="grid grid-cols-2 gap-4">
               <button
-                @click="selectedGateway = 'etegram'"
+                @click="selectedGateway = 'etegdram'"
                 :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'etegram'}"
                 class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none"
-              >
+              disabled
+                >
                 <div
                   class="flex flex-col items-center justify-center space-y-2"
                 >
