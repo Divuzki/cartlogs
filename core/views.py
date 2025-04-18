@@ -592,6 +592,9 @@ def korapay_webhook(request):
             digestmod=hashlib.sha512,
         ).hexdigest()
 
+        print("paystack_signature", paystack_signature)
+        print("calculated_signature", hmac.compare_digest(calculated_signature, paystack_signature))
+
         # Compare the calculated signature with the provided signature
         # byepass signature verification for local development
         if (
