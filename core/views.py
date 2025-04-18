@@ -576,7 +576,7 @@ def korapay_webhook(request):
             "HTTP_X_KORAPAY_SIGNATURE_HEADER"
         ]
 
-    print("HTTP_X_KORAPAY_SIGNATURE_EXIST", HTTP_X_KORAPAY_SIGNATURE_EXIST)
+    print("HTTP_X_KORAPAY_SIGNATURE_EXIST", HTTP_X_KORAPAY_SIGNATURE_EXIST, request.method)
 
     if request.method == "POST" and HTTP_X_KORAPAY_SIGNATURE_EXIST:
         # Get the Paystack signature from the headers
