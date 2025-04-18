@@ -582,19 +582,21 @@ def korapay_webhook(request):
         # Get the request body as bytes
         raw_body = request.body
         decoded_body = raw_body.decode("utf-8")
+        print(decoded_body)
 
         # Calculate the HMAC using the secret key
         calculated_signature = hmac.new(
             key=force_bytes(KORAPAY_SECRET_KEY),
             msg=force_bytes(decoded_body),
-            digestmod=hashlib.sha512,
+            digestmod=hashlib.sha256,
         ).hexdigest()
+        print("KORAPAY_SECRET_KEY", KORAPAY_SECRET_KEY)
 
         # Compare the calculated signature with the provided signature
         # byepass signature verification for local development
         if (
             hmac.compare_digest(calculated_signature, paystack_signature)
-            or settings.DEBUG
+            # or settings.DEBUG
         ):
             # Signature is valid, proceed with processing the event
             try:
@@ -605,11 +607,11 @@ def korapay_webhook(request):
                 # get the event data from event
                 event_data = event["data"]
                 # process_payment
-                print(event_type, event_data)
                 process_payment = ProcessKorapayPayment(event_type, event_data)
                 return process_payment.process_payment()
 
-            except UnicodeDecodeError:
+            except UnicodeDecodeError as e:
+                print(e)
                 return HttpResponse("Invalid request body encoding", status=400)
 
         else:
