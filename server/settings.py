@@ -25,11 +25,6 @@ ALLOWED_HOSTS = ["*"]
 LOGIN_URL = "/auth/"
 
 PAYMENT_GATEWAYS = {
-    'etegram': {
-        'name': 'Etegram',
-        'min_amount': 1000,  # 100 Naira minimum
-        'max_amount': 10000000,  # 10 million Naira maximum
-    },
     'korapay': {
         'name': 'Korapay',
         'min_amount': 1000,  # 100 Naira minimum
@@ -42,9 +37,8 @@ PAYMENT_GATEWAYS = {
     }
 }
 
-PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
-ETEGRAM_PUBLIC_KEY = os.environ.get('ETEGRAM_PUBLIC_KEY')
-ETEGRAM_PROJECT_ID = os.environ.get('ETEGRAM_PROJECT_ID')
+KORAPAY_SECRET_KEY = os.environ.get('KORAPAY_SECRET_KEY')
+KORAPAY_PUBLIC_KEY = os.environ.get('KORAPAY_PUBLIC_KEY')
 
 CSRF_COOKIE_SECURE = DEBUG == False
 SESSION_COOKIE_SECURE = DEBUG == False

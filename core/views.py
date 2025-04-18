@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
-from .utils import ProcessPaystackPayment, caluate_gateway_fee
+from .utils import ProcessKorapayPayment, caluate_gateway_fee
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from core.models import Wallet, Transaction
@@ -424,7 +424,7 @@ def profile(request):
 def disclaimer(request):
     return render(request, 'disclaimer.html')
 
-PAYSTACK_SECRET_KEY: str = settings.PAYSTACK_SECRET_KEY
+KORAPAY_SECRET_KEY: str = settings.KORAPAY_SECRET_KEY
 
 PAYMENT_GATEWAYS = settings.PAYMENT_GATEWAYS
 
@@ -488,10 +488,8 @@ def initiate_payment(request):
         # Convert amount to kobo/cents as required by payment gateways
         amount_in_kobo = int(amount * 100)
 
-        if gateway == 'paystack':
-            return initiate_paystack_payment(request, amount_in_kobo)
-        elif gateway == 'etegram':
-            return initiate_etegram_payment(request, amount_in_kobo)
+        if gateway == 'korapay':
+            return initiate_korapay_payment(request, amount_in_kobo)
         elif gateway == 'manual':
             return initiate_manual_payment(request, amount_in_kobo)
             
@@ -503,66 +501,7 @@ def initiate_payment(request):
             'errors': {'general': 'An error occurred while processing payment'}
         })
 
-def initiate_paystack_payment(request, amount_in_kobo):
-    amount_in_naira = Decimal(amount_in_kobo / 100)
-
-    # get next url
-    next_url = request.GET.get('next')
-    if not next_url:
-        next_url = request.path
-    
-    try:
-        headers = {
-            'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}',
-            'Content-Type': 'application/json'
-        }
-
-        site_url = request.build_absolute_uri('/')
-
-        fee = caluate_gateway_fee(amount_in_naira)
-        fee_in_kobo = int(fee * 100)
-
-        call_back_url = f'{site_url}{next_url}'
-
-        # avoid double // between url and next_url without affect https://
-        call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
-
-        data = {
-            'email': request.user.email,
-            'amount': amount_in_kobo + fee_in_kobo,
-            'callback_url': call_back_url,
-        }
-        
-        response = requests.post(
-            'https://api.paystack.co/transaction/initialize',
-            headers=headers,
-            json=data
-        )
-        
-        if response.status_code == 200:
-            response_data = response.json()['data']
-            if response_data and response_data['authorization_url'] and response_data['reference']:
-                transaction = Transaction.objects.create(wallet=request.user.wallet, amount=amount_in_naira, type='credit', 
-                description="Pending Credit", payment_reference=response_data['reference'], payment_gateway='paystack')
-                transaction.save()
-                return JsonResponse({
-                    'success': True,
-                    'redirect_url': response_data['authorization_url']
-                })
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': {'general': 'Failed to initialize payment'}
-            })
-            
-    except Exception as e:
-        logger.error(e)
-        return JsonResponse({
-            'success': False,
-            'errors': {'general': 'An error occurred while initializing payment'}
-        })
-
-def initiate_etegram_payment(request, amount_in_kobo):
+def initiate_korapay_payment(request, amount_in_kobo):
     amount_in_naira = Decimal(amount_in_kobo / 100)
     # get next url
     next_url = request.GET.get('next')
@@ -572,12 +511,12 @@ def initiate_etegram_payment(request, amount_in_kobo):
     try:
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {settings.ETEGRAM_PUBLIC_KEY}',
+            'Authorization': f'Bearer {settings.KORAPAY_SECRET_KEY}',
         }
 
         site_url = request.build_absolute_uri('/')
 
-        fee = caluate_gateway_fee(amount_in_naira)
+        # fee = caluate_gateway_fee(amount_in_naira)
 
         call_back_url = f'{site_url}{next_url}'
 
@@ -585,33 +524,31 @@ def initiate_etegram_payment(request, amount_in_kobo):
         call_back_url = call_back_url.replace('//', '/').replace("https:/", "https://").replace("http:/", "http://")
 
         data = {
-            'projectID': settings.ETEGRAM_PROJECT_ID,
-            'publicKey': settings.ETEGRAM_PUBLIC_KEY,
             'reference': str(uuid.uuid4().hex[:8]),
-            'amount': (amount_in_kobo / 100) + float(fee),  # Etegram uses actual amount
-            'email': request.user.email,
+            'amount': (amount_in_kobo / 100),
             'redirect_url': call_back_url,
-            'phone': '08065778026',
-            # 'phone': '08137274139',
-            'firstname': request.user.username,
-            'lastname': request.user.username,
+            'currency': 'NGN',
+            'customer': {
+                'email': request.user.email,
+                'name': request.user.username,
+            }
         }
         
         response = requests.post(
-            f'https://api-checkout.etegram.com/api/transaction/initialize/{settings.ETEGRAM_PROJECT_ID}',
+            f'https://api.korapay.com/merchant/api/v1/charges/initialize',
             headers=headers,
             json=data
         )
 
-        if response.status_code == 201:
+        if response.status_code == 200:
             response_data = response.json()
-            if response_data and response_data['data'] and response_data['data']['authorization_url']:
+            if response_data and response_data['data'] and response_data['data']['checkout_url']:
                 transaction = Transaction.objects.create(wallet=request.user.wallet, amount=amount_in_naira, type='credit', 
-                description="Pending Credit", payment_reference=data.get('reference'), payment_gateway='etegram')
+                description="Pending Credit", payment_reference=data.get('reference'), payment_gateway='korapay')
                 transaction.save()
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': response_data['data']['authorization_url']
+                    'redirect_url': response_data['data']['checkout_url']
                 })
         else:
             return JsonResponse({
@@ -627,28 +564,28 @@ def initiate_etegram_payment(request, amount_in_kobo):
         })
 
 @csrf_exempt
-def paystack_webhook(request):
-    HTTP_X_PAYSTACK_SIGNATURE_EXIST = (
-        "HTTP_X_PAYSTACK_SIGNATURE" in request.META
-        or "HTTP_X_PAYSTACK_SIGNATURE_HEADER" in request.META
+def korapay_webhook(request):
+    HTTP_X_KORAPAY_SIGNATURE_EXIST = (
+        "HTTP_X_KORAPAY_SIGNATURE" in request.META
+        or "HTTP_X_KORAPAY_SIGNATURE_HEADER" in request.META
     )
 
-    # update HTTP_X_PAYSTACK_SIGNATURE_HEADER in request.META
-    if "HTTP_X_PAYSTACK_SIGNATURE_HEADER" in request.META:
-        request.META["HTTP_X_PAYSTACK_SIGNATURE"] = request.META[
-            "HTTP_X_PAYSTACK_SIGNATURE_HEADER"
+    # update HTTP_X_KORAPAY_SIGNATURE_HEADER in request.META
+    if "HTTP_X_KORAPAY_SIGNATURE_HEADER" in request.META:
+        request.META["HTTP_X_KORAPAY_SIGNATURE"] = request.META[
+            "HTTP_X_KORAPAY_SIGNATURE_HEADER"
         ]
 
-    if request.method == "POST" and HTTP_X_PAYSTACK_SIGNATURE_EXIST:
+    if request.method == "POST" and HTTP_X_KORAPAY_SIGNATURE_EXIST:
         # Get the Paystack signature from the headers
-        paystack_signature = request.META["HTTP_X_PAYSTACK_SIGNATURE"]
+        paystack_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
         # Get the request body as bytes
         raw_body = request.body
         decoded_body = raw_body.decode("utf-8")
 
         # Calculate the HMAC using the secret key
         calculated_signature = hmac.new(
-            key=force_bytes(PAYSTACK_SECRET_KEY),
+            key=force_bytes(KORAPAY_SECRET_KEY),
             msg=force_bytes(decoded_body),
             digestmod=hashlib.sha512,
         ).hexdigest()
@@ -668,7 +605,7 @@ def paystack_webhook(request):
                 # get the event data from event
                 event_data = event["data"]
                 # process_payment
-                process_payment = ProcessPaystackPayment(event_type, event_data)
+                process_payment = ProcessKorapayPayment(event_type, event_data)
                 return process_payment.process_payment()
 
             except UnicodeDecodeError:

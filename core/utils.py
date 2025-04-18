@@ -14,7 +14,7 @@ def caluate_gateway_fee(order_price):
         gateway_fee = int(Decimal(order_price) * Decimal(0.025) + 100)
     return Decimal(gateway_fee)
 
-class ProcessPaystackPayment:
+class ProcessKorapayPayment:
     """
     This class is used to process the payment based on the event type.
     """
@@ -25,7 +25,6 @@ class ProcessPaystackPayment:
         self.response_data = {}
 
     def process_payment(self):
-        logging.info("event_type", self.event_type)
         if self.event_type == "charge.dispute.create":
             return self.charge_dispute_create()
         if self.event_type == "charge.dispute.remind":
@@ -34,6 +33,8 @@ class ProcessPaystackPayment:
             return self.charge_dispute_resolve()
         if self.event_type == "charge.success":
             return self.charge_success()
+        if self.event_type == "charge.failed":
+            return self.charge_failed()
         else:
             return HttpResponse("Invalid event type", status=400)
 
@@ -87,3 +88,20 @@ class ProcessPaystackPayment:
             return HttpResponse("Charge Success", status=200)
         except Exception as e:
             return HttpResponse("Charge Failed", status=500)
+
+    def charge_failed(self):
+        try:
+            # Get reference and amount
+            reference = self.event_data["reference"]
+
+            # Get transaction and update status
+            transaction: Transaction = Transaction.objects.get(payment_reference=reference)
+            
+            transaction.status = 'failed'
+            transaction.description = "Charge Failed"
+            transaction.save()
+            return HttpResponse("Charge Failed", status=200)
+        except Exception as e:
+            logging.error(e)
+        return HttpResponse("Charge Failed", status=500)
+             
