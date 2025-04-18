@@ -42,7 +42,7 @@
         x-data="{ 
             isLoading: false,
             selectedGateway: 'korapay',
-            validGateways: ['korapay', 'manual'],
+            validGateways: ['korapay',],
             amount: '',
             errors: {},
             formatAmount(value) {
@@ -181,7 +181,7 @@
                   <span class="text-xs text-green-600">Instant Funding</span>
                 </div>
               </button>
-              <button
+              <!-- <button
                 @click="selectedGateway = 'manual'"
                 :class="{'ring-2 ring-green-500 bg-green-50': selectedGateway === 'manual'}"
                 class="p-4 border rounded-lg hover:border-green-500 transition-all focus:outline-none"
@@ -204,7 +204,7 @@
                   </svg>
                   <span class="text-xs text-gray-500">5-10 mins</span>
                 </div>
-              </button>
+              </button> -->
             </div>
             <span
               x-show="errors.gateway"

@@ -490,8 +490,8 @@ def initiate_payment(request):
 
         if gateway == 'korapay':
             return initiate_korapay_payment(request, amount_in_kobo)
-        elif gateway == 'manual':
-            return initiate_manual_payment(request, amount_in_kobo)
+        # elif gateway == 'manual':
+        #     return initiate_manual_payment(request, amount_in_kobo)
             
     except Exception as e:
         logger.error(e)

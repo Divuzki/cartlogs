@@ -30,11 +30,11 @@ PAYMENT_GATEWAYS = {
         'min_amount': 1000,  # 100 Naira minimum
         'max_amount': 10000000,  # 10 million Naira maximum
     },
-    'manual': {
-        'name': 'Manual Bank Transfer',
-        'min_amount': 1000,  # 100 Naira minimum
-        'max_amount': 10000000,  # 10 million Naira maximum
-    }
+    # 'manual': {
+    #     'name': 'Manual Bank Transfer',
+    #     'min_amount': 1000,  # 100 Naira minimum
+    #     'max_amount': 10000000,  # 10 million Naira maximum
+    # }
 }
 
 KORAPAY_SECRET_KEY = os.environ.get('KORAPAY_SECRET_KEY')
