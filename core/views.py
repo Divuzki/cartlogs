@@ -576,6 +576,8 @@ def korapay_webhook(request):
             "HTTP_X_KORAPAY_SIGNATURE_HEADER"
         ]
 
+    print("HTTP_X_KORAPAY_SIGNATURE_EXIST", HTTP_X_KORAPAY_SIGNATURE_EXIST)
+
     if request.method == "POST" and HTTP_X_KORAPAY_SIGNATURE_EXIST:
         # Get the Paystack signature from the headers
         paystack_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
@@ -605,6 +607,7 @@ def korapay_webhook(request):
                 # get the event data from event
                 event_data = event["data"]
                 # process_payment
+                print(event_type, event_data)
                 process_payment = ProcessKorapayPayment(event_type, event_data)
                 return process_payment.process_payment()
 
