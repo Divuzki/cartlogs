@@ -584,10 +584,10 @@ def korapay_webhook(request):
         korapay_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
         # Get the request body as bytes
         raw_body = request.body
-        # decoded_body = raw_body.decode("utf-8")
+        decoded_body = raw_body.decode("utf-8")
         payload = json.loads(raw_body)
         data = payload.get('data', {})
-        logging.error(data)
+        print(data, decoded_body)
 
         # Calculate the HMAC using the secret key
         calculated_signature = hmac.new(
@@ -617,7 +617,7 @@ def korapay_webhook(request):
                 return process_payment.process_payment()
 
             except UnicodeDecodeError as e:
-                logging.error(e)
+                print(e)
                 return HttpResponse("Invalid request body encoding", status=400)
 
         else:
