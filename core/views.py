@@ -577,12 +577,12 @@ def korapay_webhook(request):
             "HTTP_X_KORAPAY_SIGNATURE_HEADER"
         ]
     
-    print(request.META)
     raw_body = request.body
     decoded_body = raw_body.decode("utf-8")
     payload = json.loads(raw_body)
     data = payload.get('data', {})
     print(data, decoded_body)
+    print(request.META)
 
     if HTTP_X_KORAPAY_SIGNATURE_EXIST:
         # Get the Paystack signature from the headers
