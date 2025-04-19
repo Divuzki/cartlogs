@@ -576,10 +576,12 @@ def korapay_webhook(request):
         request.META["HTTP_X_KORAPAY_SIGNATURE"] = request.META[
             "HTTP_X_KORAPAY_SIGNATURE_HEADER"
         ]
+    
+    print(request.META)
 
     if HTTP_X_KORAPAY_SIGNATURE_EXIST:
         # Get the Paystack signature from the headers
-        paystack_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
+        korapay_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
         # Get the request body as bytes
         raw_body = request.body
         # decoded_body = raw_body.decode("utf-8")
@@ -593,13 +595,13 @@ def korapay_webhook(request):
             msg=force_bytes(json.dumps(data)),
             digestmod=hashlib.sha256,
         ).hexdigest()
-        print('calculated_signature', calculated_signature, paystack_signature)
+        print('calculated_signature', calculated_signature, korapay_signature)
         print("KORAPAY_SECRET_KEY", KORAPAY_SECRET_KEY)
 
         # Compare the calculated signature with the provided signature
         # byepass signature verification for local development
         if (
-            hmac.compare_digest(calculated_signature, paystack_signature)
+            hmac.compare_digest(calculated_signature, korapay_signature)
             # or settings.DEBUG
         ):
             # Signature is valid, proceed with processing the event
