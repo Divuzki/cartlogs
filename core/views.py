@@ -565,6 +565,7 @@ def initiate_korapay_payment(request, amount_in_kobo):
 
 @csrf_exempt
 def korapay_webhook(request):
+    print(request.body)
     HTTP_X_KORAPAY_SIGNATURE_EXIST = (
         "HTTP_X_KORAPAY_SIGNATURE" in request.META
         or "HTTP_X_KORAPAY_SIGNATURE_HEADER" in request.META
@@ -584,7 +585,7 @@ def korapay_webhook(request):
         # decoded_body = raw_body.decode("utf-8")
         payload = json.loads(raw_body)
         data = payload.get('data', {})
-        print(data)
+        logging.error(data)
 
         # Calculate the HMAC using the secret key
         calculated_signature = hmac.new(
@@ -614,7 +615,7 @@ def korapay_webhook(request):
                 return process_payment.process_payment()
 
             except UnicodeDecodeError as e:
-                print(e)
+                logging.error(e)
                 return HttpResponse("Invalid request body encoding", status=400)
 
         else:
