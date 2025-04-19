@@ -581,15 +581,18 @@ def korapay_webhook(request):
         paystack_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
         # Get the request body as bytes
         raw_body = request.body
-        decoded_body = raw_body.decode("utf-8")
-        print(decoded_body)
+        # decoded_body = raw_body.decode("utf-8")
+        payload = json.loads(raw_body)
+        data = payload.get('data', {})
+        print(data)
 
         # Calculate the HMAC using the secret key
         calculated_signature = hmac.new(
             key=force_bytes(KORAPAY_SECRET_KEY),
-            msg=force_bytes(decoded_body),
+            msg=force_bytes(json.dumps(data)),
             digestmod=hashlib.sha256,
         ).hexdigest()
+        print('calculated_signature', calculated_signature, paystack_signature)
         print("KORAPAY_SECRET_KEY", KORAPAY_SECRET_KEY)
 
         # Compare the calculated signature with the provided signature
