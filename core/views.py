@@ -565,12 +565,15 @@ def initiate_korapay_payment(request, amount_in_kobo):
 
 @csrf_exempt
 def korapay_webhook(request):
+    if request.method != 'POST':
+        return HttpResponse("Invalid request method", status=405)
+
     # Get the Korapay signature from the headers
     korapay_signature = request.headers.get('x-korapay-signature')
     
     if not korapay_signature:
         # Log the missing signature for debugging
-        logger.error("Missing Korapay signature in webhook request")
+        print("Missing Korapay signature in webhook request")
         return HttpResponse("Invalid request - missing signature", status=400)
     
     # try:
@@ -604,15 +607,15 @@ def korapay_webhook(request):
             # get the event data
             event_data = payload.get("data")
             # Log the event for debugging
-            logger.info(f"Processing event type: {event_type}")
+            print(f"Processing event type: {event_type}")
             # process payment
             process_payment = ProcessKorapayPayment(event_type, event_data)
             return process_payment.process_payment()
         except Exception as e:
-            logger.error(f"Error processing Korapay webhook: {str(e)}")
+            print(f"Error processing Korapay webhook: {str(e)}")
             return HttpResponse("Error processing webhook", status=500)
     else:
-        logger.error("Invalid signature in webhook request")
+        print("Invalid signature in webhook request")
         return HttpResponse("Invalid signature", status=403)
             
     # except json.JSONDecodeError as e:

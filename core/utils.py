@@ -82,6 +82,8 @@ class ProcessKorapayPayment:
    
             # Get wallet
             wallet: Wallet = transaction.wallet
+            if transaction.status == 'success':
+                return HttpResponse("Charge Success", status=200)
             wallet.credit(transaction.amount, transaction)
             wallet.save()
             
