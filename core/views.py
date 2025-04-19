@@ -565,66 +565,63 @@ def initiate_korapay_payment(request, amount_in_kobo):
 
 @csrf_exempt
 def korapay_webhook(request):
-    print(request.body)
-    HTTP_X_KORAPAY_SIGNATURE_EXIST = (
-        "HTTP_X_KORAPAY_SIGNATURE" in request.META
-        or "HTTP_X_KORAPAY_SIGNATURE_HEADER" in request.META
-    )
-
-    # update HTTP_X_KORAPAY_SIGNATURE_HEADER in request.META
-    if "HTTP_X_KORAPAY_SIGNATURE_HEADER" in request.META:
-        request.META["HTTP_X_KORAPAY_SIGNATURE"] = request.META[
-            "HTTP_X_KORAPAY_SIGNATURE_HEADER"
-        ]
+    # Get the Korapay signature from the headers
+    korapay_signature = request.headers.get('x-korapay-signature')
     
+    if not korapay_signature:
+        # Log the missing signature for debugging
+        logger.error("Missing Korapay signature in webhook request")
+        return HttpResponse("Invalid request - missing signature", status=400)
+    
+    # try:
+    # Get the raw request body
     raw_body = request.body
-    decoded_body = raw_body.decode("utf-8")
+    
+    # Log the raw body for debugging
+    print(f"Received webhook body: {raw_body.decode('utf-8')}")
+    
+    # Parse the JSON
     payload = json.loads(raw_body)
     data = payload.get('data', {})
-    print(data, decoded_body)
-    print(request.META)
-
-    if HTTP_X_KORAPAY_SIGNATURE_EXIST:
-        # Get the Paystack signature from the headers
-        korapay_signature = request.META["HTTP_X_KORAPAY_SIGNATURE"]
-        # Get the request body as bytes
-        
-
-        # Calculate the HMAC using the secret key
-        calculated_signature = hmac.new(
-            key=force_bytes(KORAPAY_SECRET_KEY),
-            msg=force_bytes(json.dumps(data)),
-            digestmod=hashlib.sha256,
-        ).hexdigest()
-        print('calculated_signature', calculated_signature, korapay_signature)
-        print("KORAPAY_SECRET_KEY", KORAPAY_SECRET_KEY)
-
-        # Compare the calculated signature with the provided signature
-        # byepass signature verification for local development
-        if (
-            hmac.compare_digest(calculated_signature, korapay_signature)
-            # or settings.DEBUG
-        ):
-            # Signature is valid, proceed with processing the event
-            try:
-                # get the event from request.body
-                event = json.loads(raw_body)
-                # get the event type from event
-                event_type = event["event"]
-                # get the event data from event
-                event_data = event["data"]
-                # process_payment
-                process_payment = ProcessKorapayPayment(event_type, event_data)
-                return process_payment.process_payment()
-
-            except UnicodeDecodeError as e:
-                print(e)
-                return HttpResponse("Invalid request body encoding", status=400)
-
-        else:
-            return HttpResponse("NOT ALLOWED", status=403)
-
-    return HttpResponse("Invalid request", status=400)
+    
+    # Calculate the HMAC using the secret key
+    calculated_signature = hmac.new(
+        key=force_bytes(KORAPAY_SECRET_KEY),
+        msg=force_bytes(json.dumps(data)),
+        digestmod=hashlib.sha256
+    ).hexdigest()
+    
+    # Log signatures for debugging
+    print(f"Calculated signature: {calculated_signature}")
+    print(f"Received signature: {korapay_signature}")
+    
+    # Compare the calculated signature with the provided signature
+    if hmac.compare_digest(calculated_signature, korapay_signature):
+        # Signature is valid, proceed with processing the event
+        try:
+            # get the event type from event
+            event_type = payload.get("event")
+            # get the event data
+            event_data = payload.get("data")
+            # Log the event for debugging
+            logger.info(f"Processing event type: {event_type}")
+            # process payment
+            process_payment = ProcessKorapayPayment(event_type, event_data)
+            return process_payment.process_payment()
+        except Exception as e:
+            logger.error(f"Error processing Korapay webhook: {str(e)}")
+            return HttpResponse("Error processing webhook", status=500)
+    else:
+        logger.error("Invalid signature in webhook request")
+        return HttpResponse("Invalid signature", status=403)
+            
+    # except json.JSONDecodeError as e:
+    #     logger.error(f"Invalid JSON payload: {str(e)}")
+    #     logger.error(f"Raw payload: {raw_body.decode('utf-8') if raw_body else 'None'}")
+    #     return HttpResponse("Invalid JSON payload", status=400)
+    # except Exception as e:
+    #     logger.error(f"Error in Korapay webhook: {str(e)}")
+    #     return HttpResponse("Server error", status=500)
 
 
 @csrf_exempt
