@@ -566,65 +566,65 @@ def initiate_korapay_payment(request, amount_in_kobo):
 @csrf_exempt
 def korapay_webhook(request):
     if request.method != 'POST':
-        return HttpResponse("Invalid request method", status=405)
+        # Invalid request method, return 200 as in the PHP example
+        return HttpResponse(status=200)
 
     # Get the Korapay signature from the headers
-    korapay_signature = request.headers.get('x-korapay-signature')
+    korapay_signature = request.META.get('HTTP_X_KORAPAY_SIGNATURE')
     
     if not korapay_signature:
-        # Log the missing signature for debugging
+        # Missing signature, return 200 as in the PHP example
         print("Missing Korapay signature in webhook request")
-        return HttpResponse("Invalid request - missing signature", status=400)
+        return HttpResponse(status=200)
     
-    # try:
-    # Get the raw request body
-    raw_body = request.body
-    
-    # Log the raw body for debugging
-    print(f"Received webhook body: {raw_body.decode('utf-8')}")
-    
-    # Parse the JSON
-    payload = json.loads(raw_body)
-    data = payload.get('data', {})
-    
-    # Calculate the HMAC using the secret key
-    calculated_signature = hmac.new(
-        key=force_bytes(KORAPAY_SECRET_KEY),
-        msg=force_bytes(json.dumps(data)),
-        digestmod=hashlib.sha256
-    ).hexdigest()
-    
-    # Log signatures for debugging
-    print(f"Calculated signature: {calculated_signature}")
-    print(f"Received signature: {korapay_signature}")
-    
-    # Compare the calculated signature with the provided signature
-    if hmac.compare_digest(calculated_signature, korapay_signature):
-        # Signature is valid, proceed with processing the event
-        try:
-            # get the event type from event
-            event_type = payload.get("event")
-            # get the event data
-            event_data = payload.get("data")
-            # Log the event for debugging
-            print(f"Processing event type: {event_type}")
-            # process payment
-            process_payment = ProcessKorapayPayment(event_type, event_data)
-            return process_payment.process_payment()
-        except Exception as e:
-            print(f"Error processing Korapay webhook: {str(e)}")
-            return HttpResponse("Error processing webhook", status=500)
-    else:
-        print("Invalid signature in webhook request")
-        return HttpResponse("Invalid signature", status=403)
+    try:
+        # Get the raw request body
+        raw_body = request.body
+        
+        # Log the raw body for debugging
+        print(f"Received webhook body: {raw_body.decode('utf-8')}")
+        
+        # Parse the JSON
+        payload = json.loads(raw_body)
+        data = payload.get('data', {})
+        
+        # Calculate the HMAC using the secret key - match the PHP example exactly
+        calculated_signature = hmac.new(
+            key=force_bytes(KORAPAY_SECRET_KEY),
+            msg=force_bytes(json.dumps(data, separators=(',', ':'))),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+        
+        # Log signatures for debugging
+        print(f"Calculated signature: {calculated_signature}")
+        print(f"Received signature: {korapay_signature}")
+        
+        # Compare the calculated signature with the provided signature
+        if calculated_signature == korapay_signature:
+            # Signature is valid, proceed with processing the event
+            try:
+                # get the event type from event
+                event_type = payload.get("event")
+                # get the event data
+                event_data = payload.get("data")
+                # Log the event for debugging
+                print(f"Processing event type: {event_type}")
+                # process payment
+                process_payment = ProcessKorapayPayment(event_type, event_data)
+                return process_payment.process_payment()
+            except Exception as e:
+                print(f"Error processing Korapay webhook: {str(e)}")
+                # Return 200 even on error, as in the PHP example
+                return HttpResponse(status=200)
+        else:
+            print("Invalid signature in webhook request")
+            # Return 200 for invalid signature, as in the PHP example
+            return HttpResponse(status=200)
             
-    # except json.JSONDecodeError as e:
-    #     logger.error(f"Invalid JSON payload: {str(e)}")
-    #     logger.error(f"Raw payload: {raw_body.decode('utf-8') if raw_body else 'None'}")
-    #     return HttpResponse("Invalid JSON payload", status=400)
-    # except Exception as e:
-    #     logger.error(f"Error in Korapay webhook: {str(e)}")
-    #     return HttpResponse("Server error", status=500)
+    except Exception as e:
+        print(f"Error in Korapay webhook: {str(e)}")
+        # Return 200 even on error, as in the PHP example
+        return HttpResponse(status=200)
 
 
 @csrf_exempt
