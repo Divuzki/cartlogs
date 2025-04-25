@@ -71,6 +71,10 @@ def marketplace(request):
             'account_age': account.account_age,
         })
 
+    from .models import SOCIAL_MEDIA_CHOICES
+    # sort by the order of SOCIAL_MEDIA_CHOICES
+    social_media_dict = dict(sorted(social_media_dict.items(), key=lambda item: [choice[0] for choice in SOCIAL_MEDIA_CHOICES].index(item[0])))
+
     # Convert to the desired structure
     for name, accounts in social_media_dict.items():
         grouped_accounts.append({

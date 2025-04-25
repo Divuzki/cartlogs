@@ -16,23 +16,23 @@ class Log(models.Model):
     def __str__(self):
         return f"Log for {self.account}"
 
+SOCIAL_MEDIA_CHOICES = [
+    # in a tupe [0] is the value and [1] is the display
+    ('instagram', 'Instagram'),
+    ('facebook', 'Facebook'),
+    ('tiktok', 'TikTok'),
+    ('twitter', 'Twitter'),
+    ('vpn', 'VPN'),
+    ('OJ’s SPECIAL STOCK🌚💯','OJ’s SPECIAL STOCK🌚💯'),
+    ('email', 'Email'),
+    ('streaming', 'Streaming'),
+    ('Texting💬', 'Texting💬'),
+    ('snapchat', 'Snapchat'),
+    ('reddit', 'Reddit'),
+    ('tools', 'Tools'),
+    ('others', 'Others'),
+]
 class SocialMediaAccount(models.Model):
-    SOCIAL_MEDIA_CHOICES = [
-        # in a tupe [0] is the value and [1] is the display
-        ('OJ’s SPECIAL STOCK🌚💯','OJ’s SPECIAL STOCK🌚💯'),
-        ('Texting💬', 'Texting💬'),
-        ('twitter', 'Twitter'),
-        ('facebook', 'Facebook'),
-        ('instagram', 'Instagram'),
-        ('snapchat', 'Snapchat'),
-        ('reddit', 'Reddit'),
-        ('tiktok', 'TikTok'),
-        ('vpn', 'VPN'),
-        ('tools', 'Tools'),
-        ('email', 'Email'),
-        ('streaming', 'Streaming'),
-        ('others', 'Others'),
-    ]
 
     VERIFICATION_STATUS_CHOICES = [
         ('verified', 'Verified'),
