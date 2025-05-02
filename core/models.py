@@ -52,7 +52,10 @@ class Wallet(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, editable=False)
 
     def __str__(self):
-        return self.user.username + f" ({self.user.email})"
+        try:
+            return self.user.username + f" ({self.user.email})"
+        except:
+            return self.balance
     
     @property
     def display_balance(self):
