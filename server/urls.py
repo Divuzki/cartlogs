@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from core.views import (auth_page, login_view, signup_view, request_otp, reset_password, 
 forget_passwords, change_password, disclaimer, logout_view, profile, 
-add_funds, initiate_payment, korapay_webhook, etegram_webhook, manual_payment, confirm_manual_payment)
+add_funds, initiate_payment, korapay_webhook, manual_payment, confirm_manual_payment)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
