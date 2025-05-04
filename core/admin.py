@@ -8,6 +8,13 @@ class TransactionAdmin(admin.ModelAdmin):
     search_fields = ('wallet__user__username', 'payment_reference', 'description')
     readonly_fields = ('payment_reference',)
     ordering = ('-created_at',)
+    
+    def save_model(self, request, obj, form, change):
+        # Generate a unique reference if this is a new transaction
+        if not change and not obj.payment_reference:
+            import uuid
+            obj.payment_reference = f"admin-{uuid.uuid4().hex[:12]}"
+        super().save_model(request, obj, form, change)
 
     def mark_as_success(self, request, queryset):
         queryset.update(status='success')
