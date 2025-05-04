@@ -26,7 +26,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                                 </svg>
                             </button>
-                            <span x-text="item.quantity" class="w-8 text-center font-medium"></span>
+                            <input x-model="item.quantity" x-on:change.debounce="setQuantity(item.id, $event.target.value)" type="number" inputmode="numeric" class="w-8 text-center font-medium bg-transparent"/>
                             <button 
                                 @click="updateQuantity(item.id, true)"
                                 class="p-1 rounded-md hover:bg-gray-200 transition-colors duration-150"

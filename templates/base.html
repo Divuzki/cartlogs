@@ -89,7 +89,23 @@
             this.cart = this.cart.filter(item => item.id !== id);
             this.showNotification('Removed from cart');
         },
-        
+        setQuantity(id, quantity) {
+            const item = this.cart.find(item => item.id === id);
+            if (item) {
+                if (quantity < 1) {
+                    alert('Quantity must be at least 1');
+                    item.quantity = 1;
+                    return;
+                } else if (quantity >= item.stock) {
+                    alert('Quantity cannot exceed available stock');
+                    item.quantity = item.stock;
+                    return;
+                } else {
+                    item.quantity = parseInt(quantity);
+                }
+                this.saveCartToStorage();
+            }
+        },
         updateQuantity(id, increment) {
             const item = this.cart.find(item => item.id === id);
             if (item) {

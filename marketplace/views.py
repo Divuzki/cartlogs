@@ -134,6 +134,7 @@ def checkout(request):
 
         # Create order items for each cart item
         for item_data in cart_data:
+            item_data['quantity'] = int(item_data['quantity'])
             account: SocialMediaAccount = SocialMediaAccount.objects.get(id=item_data['id'])
             # validate stock
             if account.stock < item_data['quantity']:
@@ -219,16 +220,7 @@ def confirm_payment(request):
     """
     try:
         data = json.loads(request.body)
-        password = data.get('password')
         order_number = data.get('order_number')
-        user = request.user
-
-        # Verify password
-        if not authenticate(username=user.username, password=password):
-            return JsonResponse({
-                'status': 'error',
-                'errors': {'password': 'Incorrect password'}
-            }, status=400)
 
         # Get the transaction
         try:
