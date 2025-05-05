@@ -146,10 +146,16 @@ def create_wallet(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Transaction)
 def update_transaction(sender, instance, created, **kwargs):
-    if not created and instance.payment_gateway == 'manual' and instance.type == 'credit' and instance.status == 'success' and not hasattr(instance, '_processing'):
+    # Check if it's a manual transaction and status is success and not already processing
+    if instance.payment_gateway == 'manual' and instance.status == 'success' and not hasattr(instance, '_processing'):
         instance._processing = True
+        
+        # Generate payment reference if not exists
         if instance.payment_reference is None:
             import uuid
             instance.payment_reference = str(uuid.uuid4().hex[:8])
-        instance.wallet.credit(instance.amount, transaction=instance)
+        
+        # Handle both credit and refund type transactions
+        if instance.type in ['credit', 'refund']:
+            instance.wallet.credit(instance.amount, transaction=instance)
         
