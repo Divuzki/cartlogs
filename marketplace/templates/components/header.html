@@ -84,26 +84,39 @@
   >
 </div>
 {% endif %}
-<div class="mb-5 flex w-full justify-center items-center gap-4">
-  <a
-    href="https://chat.whatsapp.com/DCWODtR1C143g4fwNvMURa"
-    class="flex flex-col items-center"
+<div class="mb-5 flex w-full justify-center items-center">
+  <div x-data="{
+      current: 0,
+      banners: [
+        { href: 'https://chat.whatsapp.com/DCWODtR1C143g4fwNvMURa', img: `{% static "whatsapp-banner.jpeg" %}`, alt: 'whatsapp group link', label: 'Join WhatsApp' },
+        { href: 'https://t.me/cartlogs', img: `{% static "telegram-banner.jpeg" %}`, alt: 'telegram group link', label: 'Join Telegram' }
+      ],
+      startX: 0,
+      endX: 0,
+      onTouchStart(e) { this.startX = e.touches[0].clientX },
+      onTouchEnd(e) {
+        this.endX = e.changedTouches[0].clientX;
+        if (this.endX - this.startX > 40) {
+          this.current = (this.current - 1 + this.banners.length) % this.banners.length;
+        } else if (this.startX - this.endX > 40) {
+          this.current = (this.current + 1) % this.banners.length;
+        }
+      }
+    }"
+    class="relative w-[250px] h-[300px] md:w-[250px] md:h-[300px] flex items-center justify-center"
+    @touchstart="onTouchStart($event)" @touchend="onTouchEnd($event)"
   >
-    <img
-      src="{% static 'whatsapp-banner.jpeg' %}"
-      height="250"
-      class="block w-[130px] md:w-[250px] rounded-lg shadow-md"
-      alt="whatsapp group link"
-    />
-    <span class="mt-2 text-sm text-gray-600 font-medium">Join WhatsApp</span>
-  </a>
-  <a href="https://t.me/cartlogs" class="flex flex-col items-center">
-    <img
-      src="{% static 'telegram-banner.jpeg' %}"
-      height="250"
-      class="block w-[130px] md:w-[250px] rounded-lg shadow-md"
-      alt="telegram group link"
-    />
-    <span class="mt-2 text-sm text-gray-600 font-medium">Join Telegram</span>
-  </a>
+    <template x-for="(banner, idx) in banners" :key="idx">
+      <a x-show="current === idx" :href="banner.href" class="flex flex-col items-center transition-all duration-300 w-full h-full top-0 left-0" style="z-index:1;">
+        <img :src="banner.img" class="block w-full h-[250px] object-cover rounded-lg shadow-md" :alt="banner.alt" />
+        <!-- <span class="mt-2 text-sm text-gray-600 font-medium" x-text="banner.label"></span> -->
+      </a>
+    </template>
+    <!-- Dots -->
+    <div class="flex justify-center mt-2 space-x-2 absolute -bottom-3 -translate-x-1/2 z-10">
+      <template x-for="(banner, idx) in banners" :key="idx">
+        <span @click="current = idx" :class="{'bg-gray-700': current === idx, 'bg-gray-300': current !== idx}" class="w-2 h-2 rounded-full cursor-pointer inline-block transition-colors"></span>
+      </template>
+    </div>
+  </div>
 </div>
