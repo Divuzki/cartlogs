@@ -6,11 +6,12 @@ class TransactionAdminForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = '__all__'
-    
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Limit the number of wallets shown in the dropdown
-        self.fields['wallet'].queryset = Wallet.objects.all().select_related('user')[:100]  # Adjust the limit as needed
+        # Ensure the wallet field is properly initialized
+        if 'wallet' in self.fields:
+            self.fields['wallet'].widget.attrs['class'] = 'admin-autocomplete'
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
@@ -20,7 +21,7 @@ class TransactionAdmin(admin.ModelAdmin):
     search_fields = ('wallet__user__username', 'payment_reference', 'description')
     readonly_fields = ('payment_reference',)
     ordering = ('-created_at',)
-    raw_id_fields = ('wallet',)  # Use a search input instead of dropdown
+    autocomplete_fields = ['wallet']  # Enable autocomplete for wallet field
     
     def save_model(self, request, obj, form, change):
         # Generate a unique reference if this is a new transaction
@@ -38,5 +39,10 @@ class TransactionAdmin(admin.ModelAdmin):
 @admin.register(Wallet)
 class WalletAdmin(admin.ModelAdmin):
     list_display = ('user', 'balance')
-    search_fields = ('user__username',)
+    search_fields = ('user__username', 'user__email')
     readonly_fields = ('balance',)
+    
+    def get_search_results(self, request, queryset, search_term):
+        # Enhance search functionality for autocomplete
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        return queryset, use_distinct
