@@ -21,50 +21,94 @@ class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, null=True)
     position = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name_plural = 'Categories'
-        ordering = ['position']
+        ordering = ['position', 'created_at']
     
     def __str__(self):
         return self.name
     
     # automatically create slug from name
     def save(self, *args, **kwargs):
+        from django.utils import timezone
+        
         self.slug = self.name.lower().replace(' ', '-')
         
-        # Handle position assignment
+        # Handle position assignment with date-based conflict resolution
         if not self.pk:  # New category
             if self.position == 0:
                 # Get the highest position and add 1
-                 max_position = Category.objects.aggregate(max_pos=models.Max('position'))['max_pos']
-                 self.position = (max_position or 0) + 1
+                max_position = Category.objects.aggregate(max_pos=models.Max('position'))['max_pos']
+                self.position = (max_position or 0) + 1
             else:
-                # Shift existing categories with position >= self.position
-                Category.objects.filter(position__gte=self.position).update(
-                    position=models.F('position') + 1
-                )
+                # Check if position already exists
+                existing_at_position = Category.objects.filter(position=self.position).exists()
+                if existing_at_position:
+                    # Shift existing categories with position >= self.position
+                    Category.objects.filter(position__gte=self.position).update(
+                        position=models.F('position') + 1
+                    )
         else:  # Existing category
             old_category = Category.objects.get(pk=self.pk)
             if old_category.position != self.position:
                 if self.position == 0:
                     # Move to end
-                     max_position = Category.objects.exclude(pk=self.pk).aggregate(max_pos=models.Max('position'))['max_pos']
-                     self.position = (max_position or 0) + 1
-                elif self.position < old_category.position:
-                    # Moving up - shift categories between new and old position down
-                    Category.objects.filter(
-                        position__gte=self.position,
-                        position__lt=old_category.position
-                    ).exclude(pk=self.pk).update(position=models.F('position') + 1)
+                    max_position = Category.objects.exclude(pk=self.pk).aggregate(max_pos=models.Max('position'))['max_pos']
+                    self.position = (max_position or 0) + 1
                 else:
-                    # Moving down - shift categories between old and new position up
-                    Category.objects.filter(
-                        position__gt=old_category.position,
-                        position__lte=self.position
-                    ).exclude(pk=self.pk).update(position=models.F('position') - 1)
+                    # Check for position conflicts and resolve using creation date
+                    conflicting_category = Category.objects.filter(
+                        position=self.position
+                    ).exclude(pk=self.pk).first()
                     
+                    if conflicting_category:
+                        if self.position < old_category.position:
+                            # Moving up - shift categories between new and old position down
+                            Category.objects.filter(
+                                position__gte=self.position,
+                                position__lt=old_category.position
+                            ).exclude(pk=self.pk).update(position=models.F('position') + 1)
+                        else:
+                            # Moving down - shift categories between old and new position up
+                            Category.objects.filter(
+                                position__gt=old_category.position,
+                                position__lte=self.position
+                            ).exclude(pk=self.pk).update(position=models.F('position') - 1)
+                            
+        # Ensure no duplicate positions exist after save
         super(Category, self).save(*args, **kwargs)
+        
+        # Post-save cleanup: fix any remaining position conflicts using creation date
+        self._fix_position_conflicts()
+    
+    def _fix_position_conflicts(self):
+        """Fix position conflicts by using creation date as tiebreaker"""
+        # Get all categories with duplicate positions
+        from django.db.models import Count
+        duplicate_positions = Category.objects.values('position').annotate(
+            count=Count('position')
+        ).filter(count__gt=1).values_list('position', flat=True)
+        
+        for position in duplicate_positions:
+            # Get categories at this position, ordered by creation date
+            categories_at_position = Category.objects.filter(
+                position=position
+            ).order_by('created_at')
+            
+            # Keep the first (oldest) category at this position
+            # Move others to the next available positions
+            for i, category in enumerate(categories_at_position[1:], 1):
+                max_position = Category.objects.aggregate(
+                    max_pos=models.Max('position')
+                )['max_pos'] or 0
+                category.position = max_position + i
+                # Use update to avoid triggering save() again
+                Category.objects.filter(pk=category.pk).update(
+                    position=category.position
+                )
     
     
     

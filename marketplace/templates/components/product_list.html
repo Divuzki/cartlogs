@@ -1,117 +1,200 @@
 {% load static %}
 
 <div class="flex-grow overflow-hidden mb-16">
-        <div class="gap-16 flex flex-col">
-            <template x-for="group in groupedAccounts" :key="group.name">
-                <div>
-                    <h1 class="text-xl font-bold mb-4 capitalize border rounded-lg p-2 bg-gradient-to-r from-green-500 to-gray-500 text-white" x-text="group.name"></h1>
-                    <div class="bg-gray-900 text-white p-4 rounded-lg mb-6 grid grid-cols-3 font-medium">
-                        <div>Product</div>
-                        <div class="text-center">Price</div>
-                        <div class="md:hidden" style="text-align: end;">Stock</div>
-                        <div class="hidden md:block">Stock</div>
-                    </div>
-                    <template x-for="account in group.accounts" :key="account.id">
-                        <div x-data="{ dropdownOpen: null }" class="grid grid-cols-3 select-none items-center py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
-                            <div class="flex items-center gap-3">
-                                <img x-bind:src="'{% static 'icons' %}/' + group.name + '.svg'" class="w-4 h-4 md:w-8 md:h-8">
-                                <div class="flex justify-between items-center w-full">
-                                    <div>
-                                        <div class="font-medium cursor-pointer capitalize text-sm md:text-base" x-text="account.title" @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div @click="dropdownOpen = dropdownOpen === account.id ? null : account.id" class="text-gray-900 font-medium text-sm text-center">₦<span class="md:text-lg text-xs" x-text="account.price.toLocaleString()"></span></div>
-                            <div class="flex md:flex-row flex-col gap-2 text-xs md:text-base items-end pr-2 justify-between">
-                                <span class="text-gray-600 flex gap-2">
-                                    <span x-text="account.stock"></span> pcs.
-                                    <span x-show="!account.inStock" class="text-red-500 md:block hidden">(Out of Stock)</span>
-                                </span>
-                                <button 
-                                    @click="addToCart(account)"
-                                    :class="account.inStock && !(cart.find(item => item.id === account.id)?.quantity >= account.stock) ? 'bg-green-500 hover:bg-green-600 active:bg-green-700' : 'bg-gray-300'"
-                                    class="rounded-lg p-2 text-white transition-colors duration-200 transform hover:scale-105"
-                                    :disabled="!account.inStock || cart.find(item => item.id === account.id)?.quantity >= account.stock"
-                                >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-                                    <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div class="gap-16 flex flex-col">
+    <template x-for="group in groupedAccounts" :key="group.name">
+      <div>
+        <h1
+          class="text-xl font-bold mb-4 capitalize border rounded-lg p-2 bg-gradient-to-r from-green-500 to-gray-500 text-white"
+          x-text="group.name"
+        ></h1>
+        <div
+          class="bg-gray-900 text-white p-4 rounded-lg mb-6 grid grid-cols-3 font-medium"
+        >
+          <div>Product</div>
+          <div class="text-center">Price</div>
+          <div class="md:hidden" style="text-align: end">Stock</div>
+          <div class="hidden md:block">Stock</div>
+        </div>
+        <template x-for="account in group.accounts" :key="account.id">
+          <div
+            x-data="{ dropdownOpen: null }"
+            class="grid grid-cols-3 select-none items-center py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 gap-2"
+          >
+            <div class="flex items-center gap-2 min-w-0">
+              <img
+                x-bind:src="'{% static 'icons' %}/' + group.name + '.svg'"
+                class="w-4 h-4 md:w-8 md:h-8 flex-shrink-0"
+              />
+              <div class="min-w-0 flex-1">
+                <div
+                  class="font-medium cursor-pointer capitalize text-sm md:text-base"
+                  x-text="account.title"
+                  @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
+                ></div>
+              </div>
+            </div>
+            <div
+              @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
+              class="text-gray-900 font-medium text-sm text-center px-2"
+            >
+              ₦<span
+                class="md:text-lg text-xs"
+                x-text="account.price.toLocaleString()"
+              ></span>
+            </div>
+            <div
+              class="flex md:flex-row flex-col gap-2 text-xs md:text-base items-end pr-2 justify-between"
+            >
+              <span class="text-gray-600 flex gap-2">
+                <span x-text="account.stock"></span> pcs.
+                <span
+                  x-show="!account.inStock"
+                  class="text-red-500 md:block hidden"
+                  >(Out of Stock)</span
+                >
+              </span>
+              <button
+                @click="addToCart(account)"
+                :class="account.inStock && !(cart.find(item => item.id === account.id)?.quantity >= account.stock) ? 'bg-green-500 hover:bg-green-600 active:bg-green-700' : 'bg-gray-300'"
+                class="rounded-lg p-2 text-white transition-colors duration-200 transform hover:scale-105"
+                :disabled="!account.inStock || cart.find(item => item.id === account.id)?.quantity >= account.stock"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg> -->
-                                </button>
-                            </div>
-                            <!-- dropdown icon to toggle view account details -->
-                            <div 
-                                style="grid-area:  2 / 2 ; z-index: 2"
-                                class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
-                                :class="{'hidden': dropdownOpen === account.id}"
-                                @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
-                            >
-                                <!-- arrow down icon -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                            <!-- Dropdown Details -->
-                            <div 
-                            x-show="dropdownOpen === account.id" 
-                            x-transition:enter="transition ease-out duration-150" 
-                            x-transition:enter-start="opacity-0 transform scale-95" 
-                            x-transition:enter-end="opacity-100 transform scale-100" 
-                            x-transition:leave="transition ease-in duration-100" 
-                            x-transition:leave-start="opacity-100 transform scale-100" 
-                            x-transition:leave-end="opacity-0 transform scale-95"
-                            class="dropdown-details mt-2 p-4  w-full select-text"
-                            style="grid-area:  2 / 4 / 2 / 1;"
-                            @click.away="dropdownOpen = null"
-                            >
-                            
-                                <p class="text-sm font-bold text-gray-600"><span x-text="account.description"></span></p>
-                                <p
-                                x-show="account.account_age !== 'None'"
-                                class="text-sm font-semibold">Account Year: <span x-text="account.account_age"></span></p>
-                                <p
-                                x-show="account.verification_status !== 'None'"
-                                class="text-sm font-semibold">Verification Status: <span x-text="account.verification_status"></span></p>
-                                <div 
-                                style="grid-area:  2 / 2 ; z-index: 2"
-                                class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
-                                :class="{'rotate-180': dropdownOpen === account.id}"
-                                @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
-                            >
-                                <!-- arrow down icon -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                            </div>
-                            <!-- End Dropdown Details -->
-                        </div>
-                    </template>
-                    <div class="flex mt-4 justify-end items-center w-full" 
-                    >
-                        <a 
-                            {% comment %} href="/view_all/{{ group.id }}" {% endcomment %}
-                            class="btn bg-green-500 flex items-center gap-2 text-white text-sm font-semibold py-2 px-4 rounded-lg block hover:bg-green-600 transition duration-300 capitalize"
-                            x-bind:href="`/view_all/${group.name}`"
-                            x-bind:text="group.name"
-                    x-show="group.accounts.length > 5"
-
-                        >view all
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-                <template x-if="group.accounts.length === 0">
-                    <div class="flex flex-col items-center justify-center h-full">
-                        <div class="text-gray-600 text-center">
-                            No accounts available for this group.
-                        </div>
-                    </div>
-                </template>
-            </template>
+              </button>
+            </div>
+            <!-- dropdown icon to toggle view account details -->
+            <div
+              style="grid-area: 2 / 2; z-index: 2"
+              class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
+              :class="{'hidden': dropdownOpen === account.id}"
+              @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
+            >
+              <!-- arrow down icon -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+            <!-- Dropdown Details -->
+            <div
+              x-show="dropdownOpen === account.id"
+              x-transition:enter="transition ease-out duration-150"
+              x-transition:enter-start="opacity-0 transform scale-95"
+              x-transition:enter-end="opacity-100 transform scale-100"
+              x-transition:leave="transition ease-in duration-100"
+              x-transition:leave-start="opacity-100 transform scale-100"
+              x-transition:leave-end="opacity-0 transform scale-95"
+              class="dropdown-details mt-2 p-4 w-full select-text"
+              style="grid-area: 2 / 4 / 2 / 1"
+              @click.away="dropdownOpen = null"
+            >
+              <p class="text-sm font-bold text-gray-600">
+                <span x-text="account.description"></span>
+              </p>
+              <p
+                x-show="account.account_age !== 'None'"
+                class="text-sm font-semibold"
+              >
+                Account Year: <span x-text="account.account_age"></span>
+              </p>
+              <p
+                x-show="account.verification_status !== 'None'"
+                class="text-sm font-semibold"
+              >
+                Verification Status:
+                <span x-text="account.verification_status"></span>
+              </p>
+              <div
+                style="grid-area: 2 / 2; z-index: 2"
+                class="cursor-pointer flex justify-center items-center w-full transition-transform duration-200"
+                :class="{'rotate-180': dropdownOpen === account.id}"
+                @click="dropdownOpen = dropdownOpen === account.id ? null : account.id"
+              >
+                <!-- arrow down icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <!-- End Dropdown Details -->
+          </div>
+        </template>
+        <div class="flex mt-4 justify-end items-center w-full">
+          <a
+            {%
+            comment
+            %}
+            href="/view_all/{{ group.id }}"
+            {%
+            endcomment
+            %}
+            class="btn bg-green-500 flex items-center gap-2 text-white text-sm font-semibold py-2 px-4 rounded-lg block hover:bg-green-600 transition duration-300 capitalize"
+            x-bind:href="`/view_all/${group.name}`"
+            x-bind:text="group.name"
+            x-show="group.accounts.length > 5"
+            >view all
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
+            </svg>
+          </a>
         </div>
+      </div>
+      <template x-if="group.accounts.length === 0">
+        <div class="flex flex-col items-center justify-center h-full">
+          <div class="text-gray-600 text-center">
+            No accounts available for this group.
+          </div>
+        </div>
+      </template>
+    </template>
+  </div>
 </div>
