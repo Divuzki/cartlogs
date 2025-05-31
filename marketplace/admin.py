@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SocialMediaAccount, Order, OrderItem, Log
+from .models import SocialMediaAccount, Order, OrderItem, Log, Category
 
 class SocialMediaAccountAdmin(admin.ModelAdmin):
     list_display = ('social_media', 'title', 'followers_count', 'price', 'is_active')
@@ -37,9 +37,17 @@ class LogAdmin(admin.ModelAdmin):
     list_display = ('account', 'timestamp')
     search_fields = ('account__social_media',)
     ordering = ('-timestamp',)
+    
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name',)
+    ordering = ('name',)
+    # slug automatically generated
+    prepopulated_fields = {'slug': ('name',)}
 
 # Register the models with the admin site
 admin.site.register(SocialMediaAccount, SocialMediaAccountAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem, OrderItemAdmin)
 admin.site.register(Log, LogAdmin)
+admin.site.register(Category, CategoryAdmin)

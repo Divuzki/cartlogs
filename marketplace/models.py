@@ -32,6 +32,24 @@ SOCIAL_MEDIA_CHOICES = [
     ('tools', 'Tools'),
     ('others', 'Others'),
 ]
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, null=True)
+    
+    class Meta:
+        verbose_name_plural = 'Categories'
+    
+    def __str__(self):
+        return self.name
+    
+    # automatically create slug from name
+    def save(self, *args, **kwargs):
+        self.slug = self.name.lower().replace(' ', '-')
+        super(Category, self).save(*args, **kwargs)
+    
+    
+    
 class SocialMediaAccount(models.Model):
 
     VERIFICATION_STATUS_CHOICES = [
@@ -43,6 +61,7 @@ class SocialMediaAccount(models.Model):
     title = models.CharField(max_length=100, blank=True, null=True)
 
     social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(help_text="A brief description of the social media account.")
     followers_count = models.PositiveIntegerField(default=0, help_text="The number of followers on the account.", null=True, blank=True)
     following_count = models.PositiveIntegerField(default=0, help_text="The number of following on the account.", null=True, blank=True)
