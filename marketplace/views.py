@@ -73,10 +73,10 @@ def marketplace(request):
 
     from .models import Category
     # Get all categories ordered by position
-    categories: list[Category] = Category.objects.all().order_by('position', 'pk')
+    categories: list[Category] = Category.objects.all()
     
-    # Create a mapping of social media to their position
-    social_media_order = {cat.position: index for index, cat in enumerate(categories)}
+    # Create a mapping of category name to their position
+    social_media_order = {cat.name: cat.position for cat in categories}
     
     # Sort the social_media_dict based on the category positions
     social_media_dict = dict(sorted(

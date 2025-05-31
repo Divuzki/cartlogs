@@ -16,22 +16,6 @@ class Log(models.Model):
     def __str__(self):
         return f"Log for {self.account}"
 
-SOCIAL_MEDIA_CHOICES = [
-    # in a tupe [0] is the value and [1] is the display
-    ('instagram', 'Instagram'),
-    ('facebook', 'Facebook'),
-    ('tiktok', 'TikTok'),
-    ('twitter', 'Twitter'),
-    ('vpn', 'VPN'),
-    ('OJ’s SPECIAL STOCK🌚💯','OJ’s SPECIAL STOCK🌚💯'),
-    ('email', 'Email'),
-    ('streaming', 'Streaming'),
-    ('Texting💬', 'Texting💬'),
-    ('snapchat', 'Snapchat'),
-    ('reddit', 'Reddit'),
-    ('tools', 'Tools'),
-    ('others', 'Others'),
-]
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -40,7 +24,7 @@ class Category(models.Model):
     
     class Meta:
         verbose_name_plural = 'Categories'
-        ordering = ['position', 'pk']
+        ordering = ['position']
     
     def __str__(self):
         return self.name
@@ -49,24 +33,36 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
         self.slug = self.name.lower().replace(' ', '-')
         
-        # Get all categories except self
-        if self.pk:
-            categories = Category.objects.exclude(pk=self.pk).order_by('position', 'pk')
-        else:
-            categories = Category.objects.all().order_by('position', 'pk')
-            
-        # If position is 0, put at the end
-        if self.position == 0:
-            if categories.exists():
-                self.position = categories.last().position + 1
+        # Handle position assignment
+        if not self.pk:  # New category
+            if self.position == 0:
+                # Get the highest position and add 1
+                 max_position = Category.objects.aggregate(max_pos=models.Max('position'))['max_pos']
+                 self.position = (max_position or 0) + 1
             else:
-                self.position = 1
-        # If position changed, shift other categories
-        else:
-            for category in categories:
-                if category.position >= self.position:
-                    category.position += 1
-                    category.save()
+                # Shift existing categories with position >= self.position
+                Category.objects.filter(position__gte=self.position).update(
+                    position=models.F('position') + 1
+                )
+        else:  # Existing category
+            old_category = Category.objects.get(pk=self.pk)
+            if old_category.position != self.position:
+                if self.position == 0:
+                    # Move to end
+                     max_position = Category.objects.exclude(pk=self.pk).aggregate(max_pos=models.Max('position'))['max_pos']
+                     self.position = (max_position or 0) + 1
+                elif self.position < old_category.position:
+                    # Moving up - shift categories between new and old position down
+                    Category.objects.filter(
+                        position__gte=self.position,
+                        position__lt=old_category.position
+                    ).exclude(pk=self.pk).update(position=models.F('position') + 1)
+                else:
+                    # Moving down - shift categories between old and new position up
+                    Category.objects.filter(
+                        position__gt=old_category.position,
+                        position__lte=self.position
+                    ).exclude(pk=self.pk).update(position=models.F('position') - 1)
                     
         super(Category, self).save(*args, **kwargs)
     
@@ -81,8 +77,6 @@ class SocialMediaAccount(models.Model):
     ]
 
     title = models.CharField(max_length=100, blank=True, null=True)
-
-    # social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(help_text="A brief description of the social media account.")
     followers_count = models.PositiveIntegerField(default=0, help_text="The number of followers on the account.", null=True, blank=True)
