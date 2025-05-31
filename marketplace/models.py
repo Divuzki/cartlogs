@@ -36,9 +36,11 @@ SOCIAL_MEDIA_CHOICES = [
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, null=True)
+    position = models.PositiveIntegerField(default=0)
     
     class Meta:
         verbose_name_plural = 'Categories'
+        ordering = ['position', 'pk']
     
     def __str__(self):
         return self.name
@@ -46,6 +48,26 @@ class Category(models.Model):
     # automatically create slug from name
     def save(self, *args, **kwargs):
         self.slug = self.name.lower().replace(' ', '-')
+        
+        # Get all categories except self
+        if self.pk:
+            categories = Category.objects.exclude(pk=self.pk).order_by('position', 'pk')
+        else:
+            categories = Category.objects.all().order_by('position', 'pk')
+            
+        # If position is 0, put at the end
+        if self.position == 0:
+            if categories.exists():
+                self.position = categories.last().position + 1
+            else:
+                self.position = 1
+        # If position changed, shift other categories
+        else:
+            for category in categories:
+                if category.position >= self.position:
+                    category.position += 1
+                    category.save()
+                    
         super(Category, self).save(*args, **kwargs)
     
     

@@ -71,9 +71,19 @@ def marketplace(request):
             'account_age': account.account_age,
         })
 
-    from .models import SOCIAL_MEDIA_CHOICES
-    # sort by the order of SOCIAL_MEDIA_CHOICES
-    social_media_dict = dict(sorted(social_media_dict.items(), key=lambda item: [choice[0] for choice in SOCIAL_MEDIA_CHOICES].index(item[0])))
+    from .models import Category
+    # Get all categories ordered by position
+    categories: list[Category] = Category.objects.all().order_by('position', 'pk')
+    
+    # Create a mapping of social media to their position
+    social_media_order = {cat.position: index for index, cat in enumerate(categories)}
+    
+    # Sort the social_media_dict based on the category positions
+    social_media_dict = dict(sorted(
+        social_media_dict.items(),
+        key=lambda item: social_media_order.get(item[0], float('inf'))
+    ))
+    
 
     # Convert to the desired structure
     for name, accounts in social_media_dict.items():
