@@ -2,10 +2,10 @@ from django.contrib import admin
 from .models import SocialMediaAccount, Order, OrderItem, Log, Category
 
 class SocialMediaAccountAdmin(admin.ModelAdmin):
-    list_display = ('social_media', 'title', 'followers_count', 'price', 'is_active')
-    search_fields = ('social_media', 'title')
-    list_filter = ('social_media', 'is_active')
-    ordering = ('social_media',)
+    list_display = ('category', 'title', 'followers_count', 'price', 'is_active')
+    search_fields = ('category', 'title')
+    list_filter = ('category', 'is_active')
+    ordering = ('category',)
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('order_number', 'user', 'status', 'total_amount', 'created_at')

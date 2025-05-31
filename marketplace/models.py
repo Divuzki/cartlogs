@@ -60,7 +60,7 @@ class SocialMediaAccount(models.Model):
 
     title = models.CharField(max_length=100, blank=True, null=True)
 
-    social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
+    # social_media = models.CharField(max_length=20, choices=SOCIAL_MEDIA_CHOICES)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(help_text="A brief description of the social media account.")
     followers_count = models.PositiveIntegerField(default=0, help_text="The number of followers on the account.", null=True, blank=True)
@@ -80,6 +80,10 @@ class SocialMediaAccount(models.Model):
 
     def __str__(self):
         return f"{self.social_media} - {self.title} - {self.followers_count} followers"
+    
+    @property
+    def social_media(self):
+        return self.category.name if self.category else ''
 
     @property
     def stock(self):
