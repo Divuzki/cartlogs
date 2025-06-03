@@ -68,7 +68,7 @@ Cartlogs is a Django-based web application that serves as a marketplace for digi
 1. Clone the repository
 
    ```
-   git clone https://github.com/yourusername/cartlogs.git
+   git clone https://github.com/divuzki/cartlogs.git
    cd cartlogs
    ```
 
