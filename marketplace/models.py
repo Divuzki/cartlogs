@@ -33,8 +33,6 @@ class Category(models.Model):
     
     # automatically create slug from name
     def save(self, *args, **kwargs):
-        from django.utils import timezone
-        
         self.slug = self.name.lower().replace(' ', '-')
         
         # Handle position assignment with date-based conflict resolution
@@ -52,7 +50,7 @@ class Category(models.Model):
                         position=models.F('position') + 1
                     )
         else:  # Existing category
-            old_category = Category.objects.get(pk=self.pk)
+            old_category: Category = Category.objects.get(pk=self.pk)
             if old_category.position != self.position:
                 if self.position == 0:
                     # Move to end
@@ -137,9 +135,88 @@ class SocialMediaAccount(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    position = models.PositiveIntegerField(default=0)
+    position_created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['position', 'position_created_at']
+    
     def __str__(self):
         return f"{self.social_media} - {self.title} - {self.followers_count} followers"
+    
+    def save(self, *args, **kwargs):
+        # Handle position assignment with date-based conflict resolution
+        if not self.pk:  # New social_media_acct
+            if self.position == 0:
+                # Get the highest position and add 1
+                max_position = SocialMediaAccount.objects.aggregate(max_pos=models.Max('position'))['max_pos']
+                self.position = (max_position or 0) + 1
+            else:
+                # Check if position already exists
+                existing_at_position = SocialMediaAccount.objects.filter(position=self.position).exists()
+                if existing_at_position:
+                    # Shift existing categories with position >= self.position
+                    SocialMediaAccount.objects.filter(position__gte=self.position).update(
+                        position=models.F('position') + 1
+                    )
+        else:  # Existing social_media_acct
+            old_social_media_acct: SocialMediaAccount = SocialMediaAccount.objects.get(pk=self.pk)
+            if old_social_media_acct.position != self.position:
+                if self.position == 0:
+                    # Move to end
+                    max_position = SocialMediaAccount.objects.exclude(pk=self.pk).aggregate(max_pos=models.Max('position'))['max_pos']
+                    self.position = (max_position or 0) + 1
+                else:
+                    # Check for position conflicts and resolve using creation date
+                    conflicting_social_media_acct = SocialMediaAccount.objects.filter(
+                        position=self.position
+                    ).exclude(pk=self.pk).first()
+                    
+                    if conflicting_social_media_acct:
+                        if self.position < old_social_media_acct.position:
+                            # Moving up - shift categories between new and old position down
+                            SocialMediaAccount.objects.filter(
+                                position__gte=self.position,
+                                position__lt=old_social_media_acct.position
+                            ).exclude(pk=self.pk).update(position=models.F('position') + 1)
+                        else:
+                            # Moving down - shift categories between old and new position up
+                            SocialMediaAccount.objects.filter(
+                                position__gt=old_social_media_acct.position,
+                                position__lte=self.position
+                            ).exclude(pk=self.pk).update(position=models.F('position') - 1)
+                            
+        # Ensure no duplicate positions exist after save
+        super(SocialMediaAccount, self).save(*args, **kwargs)
+        
+        # Post-save cleanup: fix any remaining position conflicts using creation date
+        self._fix_position_conflicts()
+    
+    def _fix_position_conflicts(self):
+        """Fix position conflicts by using creation date as tiebreaker"""
+        # Get all categories with duplicate positions
+        from django.db.models import Count
+        duplicate_positions = SocialMediaAccount.objects.values('position').annotate(
+            count=Count('position')
+        ).filter(count__gt=1).values_list('position', flat=True)
+        
+        for position in duplicate_positions:
+            # Get categories at this position, ordered by creation date
+            categories_at_position: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(
+                position=position
+            ).order_by('position_created_at')
+            
+            # Keep the first (oldest) social_media_acct at this position
+            # Move others to the next available positions
+            for i, social_media_acct in enumerate(categories_at_position[1:], 1):
+                max_position = SocialMediaAccount.objects.aggregate(
+                    max_pos=models.Max('position')
+                )['max_pos'] or 0
+                social_media_acct.position = max_position + i
+                # Use update to avoid triggering save() again
+                SocialMediaAccount.objects.filter(pk=social_media_acct.pk).update(
+                    position=social_media_acct.position
+                )
     
     @property
     def social_media(self):
