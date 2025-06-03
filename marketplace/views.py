@@ -314,6 +314,6 @@ def cancel_order(request, order_number):
         order.transaction.status = 'cancelled'
         order.transaction.save()
 
-        return redirect('marketplace:payment_cancelled')
+        return redirect('marketplace:orders')
     except Order.DoesNotExist:
-        return redirect('marketplace:payment_error')
+        return redirect('marketplace:orders')
