@@ -51,8 +51,11 @@ def marketplace(request):
 
     # Group accounts by social media
     social_media_dict = {}
+    social_media_with_slug = {}
     for account in social_media_accounts:
         social_media = account.social_media
+        slug = account.category.slug
+        social_media_with_slug[social_media] = slug
         if social_media not in social_media_dict:
             social_media_dict[social_media] = []
         followers_count = account.followers_count
@@ -87,8 +90,10 @@ def marketplace(request):
 
     # Convert to the desired structure
     for name, accounts in social_media_dict.items():
+        slug = social_media_with_slug[name]
         grouped_accounts.append({
             "name": name,
+            "slug": slug,
             "id": name,
             "accounts": accounts[:8]  # Limit to 8 accounts per social media
         })
