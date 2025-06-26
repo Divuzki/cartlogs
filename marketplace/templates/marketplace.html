@@ -9,6 +9,7 @@
         groupedAccounts: [
             {% for group in grouped_accounts %}
                 {
+                    slug: '{{ group.slug }}',
                     name: '{{ group.name }}',
                     accounts: [
                         {% for account in group.accounts %}

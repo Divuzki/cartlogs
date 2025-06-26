@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def view_all(request, social_media):
     # Fetch accounts from the database
-    accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True, social_media=social_media)
+    accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True, category__slug=social_media)
     accounts_data = []
     
     for account in accounts:
