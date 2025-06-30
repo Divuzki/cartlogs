@@ -96,13 +96,7 @@
       endX: 0,
       slidesPerView: 1,
       updateSlidesPerView() {
-        if (window.innerWidth < 640) {
-          this.slidesPerView = 3;
-        } else if (window.innerWidth < 1024) {
-          this.slidesPerView = 3;
-        } else {
-          this.slidesPerView = 3;
-        }
+          this.slidesPerView = this.banners.length;
       },
       autoSlide() {
         setInterval(() => {
