@@ -33,7 +33,18 @@ Ensure these environment variables are set in Railway:
 
 ### Step 3: Common Issues and Solutions
 
-#### Issue 1: Missing SECRET_KEY
+#### Issue 1: Database Connection During Build
+**Error:** `django.db.utils.OperationalError: could not translate host name "postgres.railway.internal" to address: Name or service not known`
+
+**Root Cause:** Database operations (migrations, collectstatic) are running during the build phase when the database service is not yet available.
+
+**Solution:** Use the `release` phase in Procfile to run database operations after the database service is available:
+```
+release: python manage.py migrate && python manage.py collectstatic --noinput
+web: gunicorn server.wsgi:application --bind 0.0.0.0:$PORT
+```
+
+#### Issue 2: Missing SECRET_KEY
 **Error:** `django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty`
 **Solution:** Set `DJANGO_SECRET_KEY` environment variable in Railway
 
