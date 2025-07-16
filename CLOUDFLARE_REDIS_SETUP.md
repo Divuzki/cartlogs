@@ -230,20 +230,16 @@ REDIS_TIMEOUT=5
 
 ### 3. Railway Deployment Configuration
 
-Create or update your `railway.toml`:
+Railway will automatically detect your Django application and handle:
+- Database migrations (`python manage.py migrate`)
+- Static file collection (`python manage.py collectstatic --noinput`)
+- Application startup with Gunicorn
 
-```toml
-[build]
-builder = "nixpacks"
-
-[deploy]
-startCommand = "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py warm_cache && gunicorn server.wsgi:application"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
-
-[environments.production]
-REDIS_URL = "${{Redis.REDIS_URL}}"
-```
+No additional configuration files are needed. Railway's auto-detection will:
+- Install dependencies from `requirements.txt`
+- Set up the database connection
+- Configure the web server
+- Handle environment variables automatically
 
 ### 4. Testing Your Setup
 

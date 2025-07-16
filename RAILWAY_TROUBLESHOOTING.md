@@ -36,13 +36,14 @@ Ensure these environment variables are set in Railway:
 #### Issue 1: Database Connection During Build
 **Error:** `django.db.utils.OperationalError: could not translate host name "postgres.railway.internal" to address: Name or service not known`
 
-**Root Cause:** Database operations (migrations, collectstatic) are running during the build phase when the database service is not yet available.
+**Root Cause:** Database operations are trying to run before the database service is available.
 
-**Solution:** Use the `release` phase in Procfile to run database operations after the database service is available:
-```
-release: python manage.py migrate && python manage.py collectstatic --noinput
-web: gunicorn server.wsgi:application --bind 0.0.0.0:$PORT
-```
+**Solution:** Railway's auto-detection handles this automatically by:
+- Running migrations after the database is available
+- Collecting static files at the appropriate time
+- Starting the web server with proper timing
+
+If issues persist, ensure your PostgreSQL service is properly connected to your project.
 
 #### Issue 2: Missing SECRET_KEY
 **Error:** `django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty`
@@ -58,8 +59,9 @@ web: gunicorn server.wsgi:application --bind 0.0.0.0:$PORT
 #### Issue 3: Static Files
 **Error:** Static files not loading
 **Solution:**
-1. Ensure `collectstatic` runs during deployment (check Procfile)
-2. Verify WhiteNoise is properly configured
+1. Railway automatically runs `collectstatic` during deployment
+2. Verify WhiteNoise is properly configured in settings.py
+3. Check that `STATIC_URL` and `STATIC_ROOT` are correctly set
 
 #### Issue 4: Cache Setup Failure
 **Error:** Redis connection errors
@@ -142,11 +144,11 @@ Once deployed, test these endpoints:
 
 ## 🔧 Quick Fixes Applied
 
-1. **Added Procfile** - Railway now knows how to start the application
-2. **Added railway.toml** - Proper deployment configuration
-3. **Made cache setup optional** - Won't block deployment if Redis isn't ready
-4. **Updated ALLOWED_HOSTS** - Includes Railway domains
-5. **Improved error handling** - Deployment continues even if cache fails
+1. **Railway Auto-Detection** - Railway automatically detects Django applications and handles deployment
+2. **Made cache setup optional** - Won't block deployment if Redis isn't ready
+3. **Updated ALLOWED_HOSTS** - Includes Railway domains
+4. **Improved error handling** - Deployment continues even if cache fails
+5. **Enhanced warm_cache command** - Better error handling and graceful failures
 
 ## 📞 Getting Help
 
