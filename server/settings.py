@@ -20,7 +20,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", 'django-insecure-=m%lj8zxnc)-*z7umq$
 DEBUG = os.getenv("DEBUG", "False") == "True"
 USE_S3 = os.getenv("USE_S3", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "*",  # Allow all hosts for now
+    "localhost",
+    "127.0.0.1",
+    ".railway.app",  # Railway domains
+    "cartlogs.com",
+    "www.cartlogs.com"
+]
 
 LOGIN_URL = "/auth/"
 

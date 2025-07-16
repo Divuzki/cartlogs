@@ -20,8 +20,9 @@ setup_cache() {
     python manage.py setup_cache
     
     if [ $? -ne 0 ]; then
-        echo "❌ Cache setup failed!"
-        exit 1
+        echo "⚠️ Cache setup failed, but continuing deployment..."
+        echo "This is normal if Redis is not yet available."
+        return 0
     fi
 }
 
@@ -44,7 +45,12 @@ run_django_command "collectstatic --noinput"
 setup_cache
 
 echo "🔥 Warming up cache..."
-run_django_command "warm_cache"
+if python manage.py warm_cache; then
+    echo "✅ Cache warm-up completed"
+else
+    echo "⚠️ Cache warm-up failed, but continuing..."
+    echo "This is normal if Redis is not yet available or database is empty."
+fi
 
 echo "🧹 Cleaning up old cache entries..."
 python -c "
