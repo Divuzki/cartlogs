@@ -23,7 +23,7 @@ def cache_stats(request):
     stats = {
         'redis_available': REDIS_AVAILABLE and is_redis,
         'cache_backend': cache_backend,
-        'environment': 'production' if settings.DEBUG else 'development',
+        'environment': 'production' if not settings.DEBUG else 'development',
     }
     
     if REDIS_AVAILABLE and is_redis:

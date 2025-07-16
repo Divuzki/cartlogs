@@ -62,7 +62,7 @@ def invalidate_cache_pattern(pattern):
         from django.conf import settings
         
         # Only use Redis pattern matching in production with Redis
-        if settings.DEBUG and hasattr(settings, 'CACHES') and \
+        if not settings.DEBUG and hasattr(settings, 'CACHES') and \
            settings.CACHES['default']['BACKEND'] == 'django_redis.cache.RedisCache':
             redis_conn = get_redis_connection("default")
             keys = redis_conn.keys(f"*{pattern}*")
