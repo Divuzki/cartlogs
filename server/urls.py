@@ -3,6 +3,7 @@ from django.urls import path, include
 from core.views import (auth_page, login_view, signup_view, request_otp, reset_password, 
 forget_passwords, change_password, disclaimer, logout_view, profile, 
 add_funds, initiate_payment, korapay_webhook, manual_payment, confirm_manual_payment)
+from core.cache_views import cache_stats, cache_keys, clear_cache
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,4 +29,9 @@ urlpatterns = [
     path('korapay_webhook/', korapay_webhook, name='korapay_webhook'),
     path('manual-payment/<str:reference>/', manual_payment, name='manual_payment'),
     path('confirm-manual-payment/', confirm_manual_payment, name='confirm_manual_payment'),
+    
+    # Cache monitoring URLs (staff only)
+    path('admin/cache/stats/', cache_stats, name='cache_stats'),
+    path('admin/cache/keys/', cache_keys, name='cache_keys'),
+    path('admin/cache/clear/', clear_cache, name='clear_cache'),
 ]

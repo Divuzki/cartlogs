@@ -2,10 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from decimal import Decimal
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from django.conf import settings
 import json
 from .models import SocialMediaAccount, Order, OrderItem
 from numerize.numerize import numerize
 from core.models import Transaction, Wallet
+from core.cache_utils import cache_view_result, cache_queryset, invalidate_cache_pattern
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib.auth import authenticate
@@ -18,9 +22,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@cache_view_result(timeout=settings.CACHE_TIMEOUT_MEDIUM, key_prefix='view_all')
 def view_all(request, social_media):
-    # Fetch accounts from the database
-    accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True, category__slug=social_media)
+    # Fetch accounts from the database with caching
+    cache_key = f'accounts_{social_media}'
+    accounts_queryset = SocialMediaAccount.objects.filter(is_active=True, category__slug=social_media)
+    accounts = cache_queryset(accounts_queryset, cache_key, timeout=settings.CACHE_TIMEOUT_MEDIUM)
     accounts_data = []
     
     for account in accounts:
@@ -45,8 +52,12 @@ def view_all(request, social_media):
     return render(request, 'view_all.html', {'accounts': accounts_data, 'social_media': social_media})
 
     
+@cache_view_result(timeout=settings.CACHE_TIMEOUT_LONG, key_prefix='marketplace')
 def marketplace(request):
-    social_media_accounts: list[SocialMediaAccount] = SocialMediaAccount.objects.filter(is_active=True)
+    # Cache the main marketplace data
+    cache_key = 'marketplace_accounts_all'
+    accounts_queryset = SocialMediaAccount.objects.filter(is_active=True)
+    social_media_accounts = cache_queryset(accounts_queryset, cache_key, timeout=settings.CACHE_TIMEOUT_LONG)
     grouped_accounts = []
 
     # Group accounts by social media
