@@ -50,42 +50,60 @@ CSRF_COOKIE_AGE = 31449600  # 1 year - longer than session to prevent issues
 - `/profile/` (Profile pages)
 - `/view/*` (Category pages with checkout forms)
 
-## Required Cloudflare Configuration Changes
+## Required Cloudflare Configuration Changes (Pro Plan)
 
-### 1. Update Cache Rules
+### 1. Page Rules (Pro Plan Feature)
 
-**Current Problematic Rule**:
-```
-Expression: (http.request.full_uri eq "cartlogs.com/") or (http.request.full_uri wildcard "*cartlogs.com/view_all/*")
-Custom Cache Key: Ignore cookies (sessionid, csrftoken, _ga, _gid)
-```
+**Critical: Create Page Rules for Form Pages**
 
-**Recommended Fix**:
+**Rule 1: Bypass Cache for Main Pages with Forms**
 ```
-Expression: (http.request.full_uri eq "cartlogs.com/") or (http.request.full_uri wildcard "*cartlogs.com/view_all/*")
-Custom Cache Key: Ignore cookies (_ga, _gid) BUT INCLUDE (sessionid, csrftoken)
+URL Pattern: cartlogs.com/
+Settings:
+- Cache Level: Bypass
+- Security Level: Medium
 ```
 
-### 2. Create Specific Rules for Form Pages
-
-**New Rule for Pages with Forms**:
+**Rule 2: Bypass Cache for Category Pages**
 ```
-Rule Name: Bypass Cache for Form Pages
-Expression: (http.request.uri.path in {"/" "/marketplace/" "/checkout/"}) or (http.request.uri.path wildcard "/view/*") or (http.request.uri.path wildcard "/auth/*")
-Action: Bypass Cache
-Reason: These pages contain forms that require fresh CSRF tokens
+URL Pattern: cartlogs.com/view/*
+Settings:
+- Cache Level: Bypass
+- Security Level: Medium
 ```
 
-### 3. Static Assets Caching (Keep Existing)
+**Rule 3: Bypass Cache for Auth Pages**
+```
+URL Pattern: cartlogs.com/auth/*
+Settings:
+- Cache Level: Bypass
+- Security Level: High
+```
 
+**Rule 4: Bypass Cache for Checkout**
 ```
-Rule Name: Cache Static Assets
-Expression: (http.request.uri.path.extension in {"css" "js" "png" "jpg" "jpeg" "gif" "svg" "ico" "woff" "woff2"})
-Action: Cache Everything
-Edge Cache TTL: 1 month
-Browser Cache TTL: 1 month
-Ignore Query String: On
+URL Pattern: cartlogs.com/checkout*
+Settings:
+- Cache Level: Bypass
+- Security Level: High
+- Browser Integrity Check: On
 ```
+
+### 2. Caching Configuration (Pro Plan)
+
+**Note**: Pro Plan doesn't have Cache Rules (Business+ feature). Use Page Rules instead.
+
+**Keep Existing Cache Settings for Static Assets**:
+- CSS, JS, Images will still be cached automatically
+- No additional configuration needed for static content
+
+### 3. Static Assets Caching (Automatic)
+
+**Pro Plan Automatic Caching**:
+- Static files (CSS, JS, images) are cached automatically
+- No additional Page Rules needed for static content
+- Cloudflare automatically detects and caches static assets
+- Default cache TTL applies (respects origin headers)
 
 ## Testing Checklist
 
@@ -111,12 +129,29 @@ Ignore Query String: On
 - Check for any increase in origin requests
 - Verify that static assets maintain high cache hit ratios
 
-## Implementation Priority
+## Pro Plan Limitations
 
-1. **Immediate**: Update Cloudflare cache rules (fixes the issue instantly)
-2. **Deploy**: Django code changes (provides additional protection)
-3. **Monitor**: Watch metrics for 24-48 hours
-4. **Optimize**: Fine-tune cache rules based on analytics
+**Features NOT Available on Pro Plan**:
+- ❌ Cache Rules (Business+ only)
+- ❌ Advanced Rate Limiting (Business+ only)
+- ❌ Bot Management (Enterprise only)
+- ❌ Custom WAF Rules (Business+ only)
+- ❌ Load Balancing (Business+ only)
+
+**Available Pro Plan Solutions**:
+- ✅ Page Rules (up to 20 rules)
+- ✅ Basic security settings
+- ✅ Auto minification
+- ✅ Basic analytics
+- ✅ SSL/TLS settings
+
+## Implementation Priority (Pro Plan)
+
+1. **Immediate**: Create Page Rules to bypass cache for form pages
+2. **Deploy**: Django middleware changes (already implemented)
+3. **Configure**: Enable Pro Plan security and performance features
+4. **Monitor**: Watch Cloudflare Analytics for 24-48 hours
+5. **Optimize**: Adjust Page Rules based on traffic patterns
 
 ## Rollback Plan
 
@@ -126,29 +161,32 @@ If issues arise:
 2. **Django**: Remove CSRF cookie settings additions
 3. **Middleware**: Revert to previous caching logic
 
-## Additional Recommendations
+## Additional Pro Plan Recommendations
 
-### 1. Consider Page Rules for Critical Paths
+### 1. Security Settings
 
-```
-URL Pattern: cartlogs.com/checkout*
-Settings: 
-- Cache Level: Bypass
-- Security Level: High
-- Browser Integrity Check: On
-```
+**Enable Available Pro Plan Security Features**:
+- **Security Level**: Set to "Medium" for most pages, "High" for sensitive areas
+- **Challenge Passage**: 30 minutes (helps with legitimate users)
+- **Browser Integrity Check**: Enable for checkout and auth pages
+- **Always Use HTTPS**: Enable to force SSL
 
-### 2. Enable Bot Fight Mode
+### 2. Performance Optimization
 
-To prevent automated attacks on checkout endpoints:
-- Enable Bot Fight Mode in Cloudflare Security settings
-- Configure rate limiting for checkout endpoints
+**Pro Plan Performance Features**:
+- **Auto Minify**: Enable for HTML, CSS, and JavaScript
+- **Brotli Compression**: Enable for better compression
+- **HTTP/2**: Enable (should be on by default)
+- **0-RTT Connection Resumption**: Enable for faster connections
 
-### 3. Monitor Core Web Vitals
+### 3. Monitoring (Pro Plan)
 
-Ensure the fix doesn't impact performance:
-- Track Largest Contentful Paint (LCP)
-- Monitor First Input Delay (FID)
-- Watch Cumulative Layout Shift (CLS)
+**Available Analytics**:
+- Monitor cache hit ratios in Cloudflare Analytics
+- Track security events and challenges
+- Watch for any unusual traffic patterns
+- Use Web Analytics (free tier) for basic insights
+
+**Note**: Advanced features like Bot Management, Rate Limiting, and detailed WAF rules require Business+ plans.
 
 This fix ensures that CSRF tokens are properly handled while maintaining Cloudflare's performance benefits for appropriate content.
