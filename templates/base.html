@@ -139,10 +139,45 @@
                 return;
             }
             
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            if (!csrfToken) {
+                console.error('CSRF token not found');
+                this.showNotification('Security token missing. Please refresh the page.');
+                this.processing = false;
+                return;
+            }
+            
             cartData.value = JSON.stringify(this.cart);
             
             try {
-                form.submit();
+                // Use fetch instead of form.submit() to ensure proper CSRF handling
+                const formData = new FormData(form);
+                
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // If it's a redirect response, follow it
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        // Handle JSON response if any
+                        const data = await response.json();
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        }
+                    }
+                } else {
+                    console.error('Checkout failed with status:', response.status);
+                    this.showNotification('Checkout failed. Please try again.');
+                    this.processing = false;
+                }
             } catch (error) {
                 console.error('Checkout failed:', error);
                 this.showNotification('Checkout failed. Please try again.');

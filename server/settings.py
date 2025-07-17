@@ -57,6 +57,13 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000"
 ]
 
+# CSRF Cookie Settings - Critical for Cloudflare compatibility
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_HTTPONLY = False  # Must be False so JavaScript can access it
+CSRF_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+CSRF_USE_SESSIONS = False  # Use cookies instead of sessions for CSRF tokens
+CSRF_COOKIE_AGE = 31449600  # 1 year - longer than session to prevent issues
+
 CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 

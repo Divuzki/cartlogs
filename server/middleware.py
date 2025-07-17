@@ -20,10 +20,13 @@ class CloudflareCacheMiddleware:
         if request.method != 'GET':
             return response
         
-        # Don't cache for authenticated users
-        if request.user.is_authenticated:
+        # Don't cache for authenticated users OR pages with forms that need CSRF
+        if request.user.is_authenticated or self._requires_csrf_protection(request.path):
             patch_cache_control(response, no_cache=True, no_store=True, must_revalidate=True)
             response['CF-Cache-Status'] = 'BYPASS'
+            # Ensure CSRF cookie is set for pages that need it
+            if self._requires_csrf_protection(request.path):
+                response['Vary'] = 'Cookie'
             return response
         
         # Set cache headers for anonymous users based on URL patterns
@@ -63,3 +66,25 @@ class CloudflareCacheMiddleware:
     def _is_category_page(self, path):
         """Check if the path is for a category page"""
         return path.startswith('/view/') and path.count('/') >= 2
+    
+    def _requires_csrf_protection(self, path):
+        """Check if the path requires CSRF protection (has forms)"""
+        csrf_protected_paths = [
+            '/',  # Main marketplace page with checkout form
+            '/marketplace/',  # Marketplace page
+            '/auth/',  # Authentication pages
+            '/checkout/',  # Checkout process
+            '/add_funds/',  # Payment pages
+            '/profile/',  # Profile pages
+        ]
+        
+        # Check for exact matches or path prefixes
+        for protected_path in csrf_protected_paths:
+            if path == protected_path or path.startswith(protected_path):
+                return True
+        
+        # Also check for view_all pages that contain checkout forms
+        if path.startswith('/view/') and path.count('/') >= 2:
+            return True
+            
+        return False
