@@ -26,7 +26,6 @@ Ensure these environment variables are set in Railway:
 - `DATABASE_URL` - Automatically provided by Railway PostgreSQL
 
 **Optional but Recommended:**
-- `REDIS_URL` - Automatically provided by Railway Redis
 - `USE_S3=False` - Set to True if using AWS S3
 - `KORAPAY_SECRET_KEY` - For payment processing
 - `KORAPAY_PUBLIC_KEY` - For payment processing
@@ -63,18 +62,16 @@ If issues persist, ensure your PostgreSQL service is properly connected to your 
 2. Verify WhiteNoise is properly configured in settings.py
 3. Check that `STATIC_URL` and `STATIC_ROOT` are correctly set
 
-#### Issue 4: Cache Setup Failure
-**Error:** Redis connection errors
+#### Issue 4: Cache Setup
+**Note:** Application now uses database cache with Cloudflare handling edge caching
 **Solution:**
-1. Add Redis service in Railway dashboard
-2. Verify `REDIS_URL` environment variable is set
-3. Cache setup is now optional and won't block deployment
+1. No additional cache service setup required
+2. Cloudflare provides edge caching for performance
 
 #### Issue 5: warm_cache Command Failure
 **Error:** `python manage.py warm_cache` fails in production
 **Common Causes:**
 - Empty database (no SocialMediaAccount or Category records)
-- Redis not available or misconfigured
 - Database connection issues
 - Missing environment variables
 
@@ -88,10 +85,9 @@ If issues persist, ensure your PostgreSQL service is properly connected to your 
    >>> print(f"Categories: {Category.objects.count()}")
    ```
 
-2. **Test cache connection:**
-   ```bash
-   python manage.py setup_cache
-   ```
+2. **Cache is now database-based:**
+   - No additional setup required
+   - Cloudflare handles edge caching
 
 3. **Run warm_cache with verbose output:**
    ```bash
@@ -117,8 +113,7 @@ python manage.py migrate
 # Collect static files
 python manage.py collectstatic --noinput
 
-# Test cache setup (optional)
-python manage.py setup_cache
+# Cache is now database-based (no setup needed)
 
 # Create superuser (if needed)
 python manage.py createsuperuser
@@ -145,7 +140,7 @@ Once deployed, test these endpoints:
 ## 🔧 Quick Fixes Applied
 
 1. **Railway Auto-Detection** - Railway automatically detects Django applications and handles deployment
-2. **Made cache setup optional** - Won't block deployment if Redis isn't ready
+2. **Simplified cache setup** - Using database cache with Cloudflare edge caching
 3. **Updated ALLOWED_HOSTS** - Includes Railway domains
 4. **Improved error handling** - Deployment continues even if cache fails
 5. **Enhanced warm_cache command** - Better error handling and graceful failures
@@ -155,12 +150,11 @@ Once deployed, test these endpoints:
 If the issue persists:
 1. Check Railway logs for specific error messages
 2. Verify all environment variables are set correctly
-3. Ensure PostgreSQL and Redis services are running
+3. Ensure PostgreSQL service is running
 4. Test the application locally with production settings
 
 ## 🚀 Next Steps After Fixing
 
-1. Set up Redis service for caching
-2. Configure custom domain
-3. Set up monitoring and logging
-4. Configure Cloudflare as per CLOUDFLARE_REDIS_SETUP.md
+1. Configure custom domain
+2. Set up monitoring and logging
+3. Configure Cloudflare for caching and optimization

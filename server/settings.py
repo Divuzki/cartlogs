@@ -82,6 +82,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'server.middleware.CloudflareCacheMiddleware',  # Cloudflare cache optimization
 ]
 
 ROOT_URLCONF = 'server.urls'
@@ -119,41 +120,16 @@ DATABASES = {
 db_from_env = dj_database_url.config(conn_max_age=600)
 DATABASES["default"].update(db_from_env)
 
-# Cache Configuration - Only use Redis in production
-if not DEBUG and os.environ.get('REDIS_URL'):
-    # Redis Cache Configuration for Production
-    CACHES = {
-        'default': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': os.environ.get('REDIS_URL'),
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                'CONNECTION_POOL_KWARGS': {
-                    'max_connections': 20,
-                    'retry_on_timeout': True,
-                },
-                'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
-                'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
-            },
-            'KEY_PREFIX': 'cartlogs',
-            'TIMEOUT': 300,  # 5 minutes default
-        }
+# Cache Configuration - Using database cache since Cloudflare handles edge caching
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
     }
-    
-    # Use Redis for sessions in production
-    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-    SESSION_CACHE_ALIAS = 'default'
-else:
-    # Use database cache for development
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-            'LOCATION': 'cache_table',
-        }
-    }
-    
-    # Use database sessions in development
-    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+}
+
+# Use database sessions
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 24 hours

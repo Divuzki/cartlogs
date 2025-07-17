@@ -22,12 +22,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@cache_view_result(timeout=settings.CACHE_TIMEOUT_MEDIUM, key_prefix='view_all')
+@cache_view_result(timeout=settings.CACHE_TIMEOUT_MEDIUM, key_prefix='view_all', cloudflare_aware=True)
 def view_all(request, social_media):
     # Fetch accounts from the database with caching
     cache_key = f'accounts_{social_media}'
     accounts_queryset = SocialMediaAccount.objects.filter(is_active=True, category__slug=social_media)
-    accounts = cache_queryset(accounts_queryset, cache_key, timeout=settings.CACHE_TIMEOUT_MEDIUM)
+    # For authenticated users, use local caching; for anonymous users, rely on Cloudflare
+    force_local_cache = request.user.is_authenticated
+    accounts = cache_queryset(accounts_queryset, cache_key, timeout=settings.CACHE_TIMEOUT_MEDIUM, force_cache=force_local_cache)
     accounts_data = []
     
     for account in accounts:
@@ -52,12 +54,14 @@ def view_all(request, social_media):
     return render(request, 'view_all.html', {'accounts': accounts_data, 'social_media': social_media})
 
     
-@cache_view_result(timeout=settings.CACHE_TIMEOUT_LONG, key_prefix='marketplace')
+@cache_view_result(timeout=settings.CACHE_TIMEOUT_LONG, key_prefix='marketplace', cloudflare_aware=True)
 def marketplace(request):
     # Cache the main marketplace data
     cache_key = 'marketplace_accounts_all'
     accounts_queryset = SocialMediaAccount.objects.filter(is_active=True)
-    social_media_accounts = cache_queryset(accounts_queryset, cache_key, timeout=settings.CACHE_TIMEOUT_LONG)
+    # For authenticated users, use local caching; for anonymous users, rely on Cloudflare
+    force_local_cache = request.user.is_authenticated
+    social_media_accounts = cache_queryset(accounts_queryset, cache_key, timeout=settings.CACHE_TIMEOUT_LONG, force_cache=force_local_cache)
     grouped_accounts = []
 
     # Group accounts by social media
