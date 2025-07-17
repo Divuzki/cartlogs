@@ -131,8 +131,13 @@ CACHES = {
 # Use database sessions
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
-# Session settings
+# Session settings - Enhanced security to prevent cross-user data leakage
 SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookies
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_SAVE_EVERY_REQUEST = True  # Regenerate session on every request
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep sessions across browser sessions
+SESSION_COOKIE_NAME = 'cartlogs_sessionid'  # Custom session cookie name
 
 # Cache timeout settings
 CACHE_TIMEOUT_SHORT = 300      # 5 minutes - for frequently changing data
