@@ -73,6 +73,7 @@
                 });
             }
             
+            this.saveCartToStorage();
             // Show notification
             this.showNotification('Added to cart');
         },
@@ -87,8 +88,10 @@
         
         removeFromCart(id) {
             this.cart = this.cart.filter(item => item.id !== id);
+            this.saveCartToStorage();
             this.showNotification('Removed from cart');
         },
+        
         setQuantity(id, quantity) {
             const item = this.cart.find(item => item.id === id);
             if (item) {
@@ -106,6 +109,7 @@
                 this.saveCartToStorage();
             }
         },
+        
         updateQuantity(id, increment) {
             const item = this.cart.find(item => item.id === id);
             if (item) {
@@ -113,6 +117,51 @@
                     item.quantity += 1;
                 } else if (item.quantity > 1) {
                     item.quantity -= 1;
+                }
+                this.saveCartToStorage();
+            }
+        },
+        
+        async handleCheckout() {
+            if (this.cart.length === 0) {
+                this.showNotification('Your cart is empty');
+                return;
+            }
+            
+            this.processing = true;
+            const form = document.getElementById('checkout-form');
+            const cartData = document.getElementById('cart-data');
+            
+            if (!form || !cartData) {
+                console.error('Checkout form elements not found');
+                this.showNotification('Checkout form not found. Please refresh the page.');
+                this.processing = false;
+                return;
+            }
+            
+            cartData.value = JSON.stringify(this.cart);
+            
+            try {
+                form.submit();
+            } catch (error) {
+                console.error('Checkout failed:', error);
+                this.showNotification('Checkout failed. Please try again.');
+                this.processing = false;
+            }
+        },
+        
+        saveCartToStorage() {
+            localStorage.setItem('cart', JSON.stringify(this.cart));
+        },
+        
+        loadCartFromStorage() {
+            const savedCart = localStorage.getItem('cart');
+            if (savedCart) {
+                try {
+                    this.cart = JSON.parse(savedCart);
+                } catch (error) {
+                    console.error('Error loading cart from storage:', error);
+                    this.cart = [];
                 }
             }
         },
@@ -124,7 +173,7 @@
         get totalAmount() {
             return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         }
-    }" @keydown.escape="isCartOpen = false" @keydown.escape="isMenuOpen = false">
+    }" x-init="loadCartFromStorage()" @keydown.escape="isCartOpen = false" @keydown.escape="isMenuOpen = false">
         <!-- Notification Toast -->
         <div 
             x-show="notification.show"
