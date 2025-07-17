@@ -20,7 +20,7 @@ def cache_view_result(timeout=None, key_prefix='view', cloudflare_aware=True):
     
     When cloudflare_aware=True (default), this decorator will:
     - Skip local caching for anonymous users (Cloudflare handles this)
-    - Only cache locally for authenticated users
+    - Only cache locally for authenticated users with user-specific cache keys
     
     When cloudflare_aware=False, it behaves like the original decorator
     """
@@ -31,9 +31,6 @@ def cache_view_result(timeout=None, key_prefix='view', cloudflare_aware=True):
             if request.method != 'GET':
                 return view_func(request, *args, **kwargs)
             
-            # Generate cache key
-            cache_key = f"{key_prefix}:{view_func.__name__}:{make_cache_key(*args, **kwargs)}"
-            
             # Cloudflare-aware caching strategy
             if cloudflare_aware:
                 # For anonymous users, skip local caching (Cloudflare handles it)
@@ -43,22 +40,27 @@ def cache_view_result(timeout=None, key_prefix='view', cloudflare_aware=True):
                     # Set cache headers for Cloudflare (handled by middleware)
                     return result
                 
-                # For authenticated users, use local caching
-                result = cache.get(cache_key)
+                # For authenticated users, use local caching with user-specific cache key
+                # CRITICAL FIX: Include user ID in cache key to prevent cross-user data leakage
+                user_cache_key = f"{key_prefix}:user_{request.user.id}:{view_func.__name__}:{make_cache_key(*args, **kwargs)}"
+                result = cache.get(user_cache_key)
                 if result is not None:
                     return result
                 
                 # Execute view and cache result for authenticated users
                 result = view_func(request, *args, **kwargs)
                 cache_timeout = timeout or getattr(settings, 'CACHE_TIMEOUT_MEDIUM', 1800)
-                cache.set(cache_key, result, cache_timeout)
+                cache.set(user_cache_key, result, cache_timeout)
                 return result
             
             # Legacy behavior (non-Cloudflare aware)
             else:
-                # Don't cache for authenticated users
+                # Don't cache for authenticated users to prevent cross-user data leakage
                 if request.user.is_authenticated:
                     return view_func(request, *args, **kwargs)
+                
+                # Generate cache key for anonymous users only
+                cache_key = f"{key_prefix}:{view_func.__name__}:{make_cache_key(*args, **kwargs)}"
                 
                 # Try to get from cache
                 result = cache.get(cache_key)
