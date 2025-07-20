@@ -130,8 +130,7 @@ DATABASES["default"].update(db_from_env)
 # Cache Configuration - Using database cache since Cloudflare handles edge caching
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'cache_table',
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
 
